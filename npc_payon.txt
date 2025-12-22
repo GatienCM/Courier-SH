@@ -8,7 +8,7 @@
 // HUB DE DISTRIBUTION - Payon
 // ============================================
 
-payon,152,75,4	script	Maître des Coursiers#py	4_F_AGENTKAFRA,{
+payon,152,75,4	script	Maître des Coursiers#py	47,{
 	.@city_id = 1; // Payon
 	
 	mes "[Maîtresse Sakura]";
@@ -106,7 +106,7 @@ TakePackage:
 // DÉPÔT D'APPROVISIONNEMENT - Payon
 // ============================================
 
-payon,147,75,4	script	Responsable des Stocks#py	4_M_ORIENT01,{
+payon,147,75,4	script	Responsable des Stocks#py	47,{
 	.@city_id = 1; // Payon
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");
@@ -202,7 +202,7 @@ DepositContribution:
 // POINT DE LIVRAISON - Payon
 // ============================================
 
-payon,157,75,4	script	Agent de Livraison#py	4_M_SEAMAN,{
+payon,157,75,4	script	Agent de Livraison#py	47,{
 	.@city_id = 1; // Payon
 	
 	mes "[Agent Hiro]";
@@ -231,7 +231,7 @@ payon,157,75,4	script	Agent de Livraison#py	4_M_SEAMAN,{
 // BOUTIQUE DE RESSOURCES - Payon
 // ============================================
 
-payon,142,75,4	script	Marchand de Soie#py	4_F_YUNYANG,{
+payon,142,75,4	script	Marchand de Soie#py	47,{
 	.@city_id = 1; // Payon
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");

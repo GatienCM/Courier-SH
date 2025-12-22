@@ -8,7 +8,7 @@
 // HUB DE DISTRIBUTION - Prontera
 // ============================================
 
-prontera,155,185,4	script	Maître des Coursiers#pr	4W_M_01,{
+prontera,155,185,4	script	Maître des Coursiers#pr	47,{
 	.@city_id = 0; // Prontera
 	
 	mes "[Maître Aldric]";
@@ -115,7 +115,7 @@ TakePackage:
 // DÉPÔT D'APPROVISIONNEMENT - Prontera
 // ============================================
 
-prontera,150,185,4	script	Responsable des Stocks#pr	4_M_ORIENT02,{
+prontera,150,185,4	script	Responsable des Stocks#pr	47,{
 	.@city_id = 0; // Prontera
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");
@@ -234,7 +234,7 @@ DepositContribution:
 // POINT DE LIVRAISON - Prontera
 // ============================================
 
-prontera,160,185,4	script	Agent de Livraison#pr	4_M_RACHMAN1,{
+prontera,160,185,4	script	Agent de Livraison#pr	47,{
 	.@city_id = 0; // Prontera
 	
 	mes "[Agent Marcel]";
@@ -265,7 +265,7 @@ prontera,160,185,4	script	Agent de Livraison#pr	4_M_RACHMAN1,{
 // BOUTIQUE DE RESSOURCES - Prontera
 // ============================================
 
-prontera,145,185,4	script	Marchand de Farine#pr	4_M_GROOM,{
+prontera,145,185,4	script	Marchand de Farine#pr	47,{
 	.@city_id = 0; // Prontera
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");

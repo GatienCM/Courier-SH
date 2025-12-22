@@ -8,7 +8,7 @@
 // HUB DE DISTRIBUTION - Geffen
 // ============================================
 
-geffen,120,60,4	script	Maître des Coursiers#gf	2_M_SAGE_B,{
+geffen,120,60,4	script	Maître des Coursiers#gf	47,{
 	.@city_id = 2; // Geffen
 	
 	mes "[Archiviste Thaddeus]";
@@ -106,7 +106,7 @@ TakePackage:
 // DÉPÔT D'APPROVISIONNEMENT - Geffen
 // ============================================
 
-geffen,115,60,4	script	Responsable des Stocks#gf	2_M_MAGE,{
+geffen,115,60,4	script	Responsable des Stocks#gf	47,{
 	.@city_id = 2; // Geffen
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");
@@ -202,7 +202,7 @@ DepositContribution:
 // POINT DE LIVRAISON - Geffen
 // ============================================
 
-geffen,125,60,4	script	Agent de Livraison#gf	4_M_TOWER,{
+geffen,125,60,4	script	Agent de Livraison#gf	47,{
 	.@city_id = 2; // Geffen
 	
 	mes "[Agent Cornelius]";
@@ -231,7 +231,7 @@ geffen,125,60,4	script	Agent de Livraison#gf	4_M_TOWER,{
 // BOUTIQUE DE RESSOURCES - Geffen
 // ============================================
 
-geffen,110,60,4	script	Marchand de Cristaux#gf	1_M_WIZARD,{
+geffen,110,60,4	script	Marchand de Cristaux#gf	47,{
 	.@city_id = 2; // Geffen
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");

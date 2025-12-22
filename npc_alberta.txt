@@ -8,7 +8,7 @@
 // HUB DE DISTRIBUTION - Alberta
 // ============================================
 
-alberta,117,56,4	script	Maître des Coursiers#ab	4_M_04,{
+alberta,117,56,4	script	Maître des Coursiers#ab	3,{
 	.@city_id = 3; // Alberta
 	
 	mes "[Capitaine Lars]";
@@ -106,7 +106,7 @@ TakePackage:
 // DÉPÔT D'APPROVISIONNEMENT - Alberta
 // ============================================
 
-alberta,112,56,4	script	Responsable des Stocks#ab	4_M_05,{
+alberta,112,56,4	script	Responsable des Stocks#ab	3,{
 	.@city_id = 3; // Alberta
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");
@@ -202,7 +202,7 @@ DepositContribution:
 // POINT DE LIVRAISON - Alberta
 // ============================================
 
-alberta,122,56,4	script	Agent de Livraison#ab	4_M_SEAMAN,{
+alberta,122,56,4	script	Agent de Livraison#ab	3,{
 	.@city_id = 3; // Alberta
 	
 	mes "[Agent Erik]";
@@ -231,7 +231,7 @@ alberta,122,56,4	script	Agent de Livraison#ab	4_M_SEAMAN,{
 // BOUTIQUE DE RESSOURCES - Alberta
 // ============================================
 
-alberta,107,56,4	script	Marchand de Poisson#ab	4_M_03,{
+alberta,107,56,4	script	Marchand de Poisson#ab	3,{
 	.@city_id = 3; // Alberta
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");

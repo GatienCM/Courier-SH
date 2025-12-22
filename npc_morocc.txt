@@ -8,7 +8,7 @@
 // HUB DE DISTRIBUTION - Morocc
 // ============================================
 
-morocc,162,97,4	script	Maître des Coursiers#mo	4_M_ARABHMAN,{
+morocc,162,97,4	script	Maître des Coursiers#mo	2,{
 	.@city_id = 4; // Morocc
 	
 	mes "[Maître Rashid]";
@@ -106,7 +106,7 @@ TakePackage:
 // DÉPÔT D'APPROVISIONNEMENT - Morocc
 // ============================================
 
-morocc,157,97,4	script	Responsable des Stocks#mo	4_M_ARABLOKI,{
+morocc,157,97,4	script	Responsable des Stocks#mo	2,{
 	.@city_id = 4; // Morocc
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");
@@ -202,7 +202,7 @@ DepositContribution:
 // POINT DE LIVRAISON - Morocc
 // ============================================
 
-morocc,167,97,4	script	Agent de Livraison#mo	4_M_ARАБMALE,{
+morocc,167,97,4	script	Agent de Livraison#mo	2,{
 	.@city_id = 4; // Morocc
 	
 	mes "[Agent Farid]";
@@ -231,7 +231,7 @@ morocc,167,97,4	script	Agent de Livraison#mo	4_M_ARАБMALE,{
 // BOUTIQUE DE RESSOURCES - Morocc
 // ============================================
 
-morocc,152,97,4	script	Marchand d'Épices#mo	4_M_ARABIA,{
+morocc,152,97,4	script	Marchand d'Épices#mo	2,{
 	.@city_id = 4; // Morocc
 	.@resource_id = getvariableofnpc(.CityResources[.@city_id], "CourierConfig");
 	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@city_id], "CourierConfig");
