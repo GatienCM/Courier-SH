@@ -1,0 +1,61 @@
+// Fonctions communes (utilisent Courier_Controller::*)
+
+function	script	F_CityIndex	{
+	.@name$ = getarg(0);
+	for (.@i = 0; .@i < getarraysize(Courier_Controller::Cities$); .@i++)
+		if (.@name$ == Courier_Controller::Cities$[.@i]) return .@i;
+	return -1;
+}
+
+// Tente d'augmenter la prospérité en consommant NeedPerLevel de chaque res
+function	script	F_TryProsperity	{
+	.@city$ = getarg(0);
+	.@need  = Courier_Controller::NeedPerLevel;
+	.@cap   = Courier_Controller::ProspCap;
+
+	.@c0 = getd("CRES_"+.@city$+"_0");
+	.@c1 = getd("CRES_"+.@city$+"_1");
+	.@c2 = getd("CRES_"+.@city$+"_2");
+	.@vl = getd("VLEVEL_"+.@city$);
+
+	if (.@vl >= .@cap) return;
+
+	if (.@c0 >= .@need && .@c1 >= .@need && .@c2 >= .@need) {
+		setd "CRES_"+.@city$+"_0", .@c0 - .@need;
+		setd "CRES_"+.@city$+"_1", .@c1 - .@need;
+		setd "CRES_"+.@city$+"_2", .@c2 - .@need;
+		setd "VLEVEL_"+.@city$, .@vl + 1;
+		dispbottom "["+.@city$+"] Prospérité augmentée ("+(.@vl+1)+").";
+	}
+	return;
+}
+
+// Récompense de base (à adapter)
+function	script	F_BaseReward	{
+	.@city$ = getarg(0);
+	if (.@city$ == "prontera") return 15000;
+	if (.@city$ == "payon")    return 20000;
+	if (.@city$ == "geffen")   return 24000;
+	return 12000;
+}
+
+// Coefficient distance origine->destination (manuel à ajuster)
+function	script	F_DistCoef	{
+	.@dst$  = getarg(0);
+	.@orig$ = getarg(1);
+	if (.@orig$ == .@dst$) return 0; // refusé
+	if (.@orig$ == "prontera" && .@dst$ == "payon")    return 1.5;
+	if (.@orig$ == "prontera" && .@dst$ == "geffen")   return 1.5;
+	if (.@orig$ == "payon"    && .@dst$ == "prontera") return 1.5;
+	if (.@orig$ == "payon"    && .@dst$ == "geffen")   return 2.0;
+	if (.@orig$ == "geffen"   && .@dst$ == "prontera") return 1.5;
+	if (.@orig$ == "geffen"   && .@dst$ == "payon")    return 2.0;
+	return 1.0;
+}
+
+// Démarre le timer d’événements (Courier_Event_Handler)
+function	script	F_StartCourierTimer	{
+	donpcevent "Courier_Event_Handler::OnInit";
+	donpcevent "Courier_Event_Handler::F_StartCourierTimer";
+	return;
+}

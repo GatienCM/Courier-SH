@@ -1,0 +1,36 @@
+// Réception : livrer dans une autre ville que l’origine.
+// Ajoute +10 ressources de l’origine dans la prospérité de la ville cible, tente la montée, récompense.
+
+-	script	Courier_Receiver	-1,{
+	mes "[Agent local]";
+	if (!T_HAS_PARCEL || countitem(12000) < 1) { mes "Pas de colis."; close; }
+
+	.@here$   = strcharinfo(3);
+	.@origin$ = T_PARCEL_ORIGIN$;
+
+	if (.@here$ == .@origin$) { mes "Ce colis vient d'ici. Livre-le ailleurs."; close; }
+
+	mes "Livrer le colis de "+.@origin$+" ici ?";
+	if (select("Oui:Non")==2) close;
+
+	.@oIdx   = callfunc("F_CityIndex", .@origin$);
+	.@resIdx = getd("Courier_Controller::ProdType["+.@oIdx+"]"); // ressource liée à l'origine
+
+	delitem 12000,1;
+	set T_HAS_PARCEL, 0;
+	set T_PARCEL_ORIGIN$, "";
+
+	// +10 ressources de l'origine dans la ville cible
+	setd "CRES_"+.@here$+"_"+.@resIdx, getd("CRES_"+.@here$+"_"+.@resIdx) + 10;
+	callfunc "F_TryProsperity", .@here$;
+
+	.@base   = callfunc("F_BaseReward", .@here$);
+	.@dist   = callfunc("F_DistCoef", .@here$, .@origin$);
+	.@vlevel = getd("VLEVEL_"+.@here$);
+	.@rank   = T_COURIER_RANK;
+	.@reward = (.@base * .@dist) + (1000 * .@vlevel) + (500 * .@rank);
+
+	set Zeny, Zeny + .@reward;
+	mes "Livraison acceptée. Récompense : "+.@reward+" z.";
+	close;
+}
