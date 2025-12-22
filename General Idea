@@ -1,0 +1,96 @@
+
+Concept : Système de Transport de Marchandises pour rAthena
+Je souhaite créer un système économique de coursier/transporteur complet et immersif pour mon serveur rAthena. Le concept est le suivant :
+
+Vision globale
+Les joueurs peuvent devenir des transporteurs de marchandises entre plusieurs villes partenaires. Chaque ville a sa propre économie, produit des ressources spécifiques, et peut prospérer grâce aux échanges commerciaux. Le système doit créer une boucle économique dynamique où les actions des joueurs influencent directement la richesse et le développement des villes.
+
+Mécaniques principales
+1. Économie des villes
+Chaque ville doit avoir :
+
+Une ressource locale unique qu'elle produit naturellement
+Un système de prospérité qui évolue selon les échanges commerciaux
+Un stock de colis généré automatiquement à partir des ressources collectées
+Des récompenses variables qui dépendent de son niveau de développement
+Les villes doivent être interdépendantes : elles ont besoin des ressources des autres villes pour prospérer, créant ainsi un véritable réseau commercial.
+
+2. Rôle du transporteur
+Les joueurs peuvent :
+
+S'enregistrer comme transporteurs et progresser dans un système de rangs
+Récupérer des colis dans une ville source
+Livrer ces colis dans une autre ville destination
+Contribuer à l'économie en déposant des ressources qu'ils trouvent/achètent
+Le transporteur doit faire des choix stratégiques :
+
+Quelle route emprunter ? (courtes distances = moins de risques, longues distances = meilleures récompenses)
+Contribuer à la production de colis ou à la prospérité ?
+Quelles villes privilégier pour maximiser les gains ?
+3. Production automatique
+Le système doit fonctionner de manière autonome :
+
+Conversion périodique et automatique des ressources locales en colis transportables
+Limite de stockage pour éviter l'inflation
+Les joueurs alimentent le système, mais il tourne de lui-même
+4. Système de prospérité
+Chaque ville a un niveau de développement qui :
+
+Augmente quand elle reçoit suffisamment de ressources variées (pas seulement sa propre production)
+Influence directement les récompenses offertes aux transporteurs
+Crée un objectif collectif pour la communauté
+Il faut un coût d'amélioration nécessitant plusieurs types de ressources pour encourager les échanges multidirectionnels.
+
+5. Récompenses dynamiques
+Les gains des transporteurs doivent dépendre de plusieurs facteurs :
+
+Distance parcourue : plus c'est loin, plus ça paie
+Prospérité de destination : livrer dans une ville riche rapporte plus
+Rang du transporteur : bonus progressifs pour fidéliser les joueurs
+Base variable selon la ville (certaines sont plus riches que d'autres)
+6. Événements aléatoires pendant le transport
+Pour rendre les trajets plus vivants et risqués, des événements aléatoires doivent se déclencher périodiquement quand un joueur transporte un colis :
+
+Événements hostiles :
+
+Apparition de bandits/monstres qui attaquent
+Conditions météo défavorables (pluie, tempête) qui ralentissent
+Idées supplémentaires possibles :
+
+Rencontres avec d'autres PNJs (marchands, mendiants)
+Bonus temporaires (bon vent, raccourcis)
+Mini-quêtes contextuelles
+Ces événements doivent avoir une fréquence raisonnable (ni trop rares ni trop fréquents) et des conséquences significatives mais gérables.
+
+7. Points d'interaction
+Chaque ville doit avoir plusieurs NPCs :
+
+Hub de distribution : pour récupérer les colis à transporter
+Dépôt d'approvisionnement : pour contribuer avec ses propres ressources
+Point de livraison : pour remettre les colis et recevoir sa récompense
+Boutique locale : pour acheter la ressource spécifique de la ville
+Contraintes techniques
+Syntaxe rAthena native (pas Hercules)
+Architecture modulaire : fichiers séparés pour faciliter la maintenance
+Variables persistantes : économie serveur qui persiste entre redémarrages
+Optimisation : système capable de gérer plusieurs joueurs simultanés
+Sécurité : validation des inputs, anti-exploit, gestion d'erreurs
+Ambiance et thématique
+Le système doit évoquer :
+
+Un réseau de caravanes médiévales avec ses dangers et opportunités
+Une économie vivante où chaque action compte
+Un sentiment de progression (rangs, villes qui se développent)
+Une dimension communautaire (les joueurs construisent ensemble la prospérité)
+Ce que j'attends
+Crée un système complet, équilibré et imaginatif en respectant ces concepts, mais avec ta propre vision sur :
+
+Les noms et types de ressources
+Le nombre et les noms des villes
+Les formules de calcul et valeurs d'équilibrage
+Les types d'événements aléatoires
+Les paliers de progression
+Les mécanismes supplémentaires qui enrichiraient le gameplay
+Je veux un système prêt à l'emploi avec tous les fichiers nécessaires, des commentaires clairs en français, et un fichier README expliquant l'installation et la configuration.
+
+**Sois créatif tout en gardant une cohérence de game design ! **

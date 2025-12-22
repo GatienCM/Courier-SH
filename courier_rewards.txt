@@ -1,0 +1,277 @@
+//===================================================================
+//= Système de Calcul et Récompenses
+//===================================================================
+//= Gestionnaire des calculs de récompenses et événements
+//===================================================================
+
+-	script	CourierRewards	FAKE_NPC,{
+end;
+
+// ============================================
+// CALCUL DES RÉCOMPENSES DE LIVRAISON
+// ============================================
+
+// Calculer la récompense pour une livraison
+// callsub(CalculateReward, source_city, dest_city, player_rank, dest_prosperity)
+CalculateReward:
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	.@rank = getarg(2);
+	.@prosperity = getarg(3);
+	
+	// Récompense de base
+	.@reward = getvariableofnpc(.BaseReward, "CourierConfig");
+	
+	// Calculer la distance (différence d'indices)
+	.@distance = (.@dest - .@source);
+	if (.@distance < 0) .@distance = -.@distance;
+	
+	// Bonus de distance
+	.@distance_bonus = .@distance * getvariableofnpc(.DistanceBonus, "CourierConfig");
+	.@reward += .@distance_bonus;
+	
+	// Bonus de rang
+	.@rank_bonus_pct = getvariableofnpc(.RankBonus[.@rank], "CourierConfig");
+	.@reward += (.@reward * .@rank_bonus_pct / 100);
+	
+	// Bonus de prospérité
+	.@prosperity_bonus_pct = getvariableofnpc(.ProsperityBonus[.@prosperity], "CourierConfig");
+	.@reward += (.@reward * .@prosperity_bonus_pct / 100);
+	
+	return .@reward;
+
+// Calculer l'expérience pour une livraison
+// callsub(CalculateExp, source_city, dest_city, player_rank)
+CalculateExp:
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	.@rank = getarg(2);
+	
+	// Expérience de base
+	.@exp = getvariableofnpc(.BaseExp, "CourierConfig");
+	
+	// Calculer la distance
+	.@distance = (.@dest - .@source);
+	if (.@distance < 0) .@distance = -.@distance;
+	
+	// Bonus de distance (50% par unité)
+	.@exp += (.@exp * .@distance * 50 / 100);
+	
+	// Bonus de rang (20% par rang)
+	.@exp += (.@exp * .@rank * 20 / 100);
+	
+	return .@exp;
+
+// ============================================
+// GESTION DU TRANSPORT ET DES ÉVÉNEMENTS
+// ============================================
+
+// Démarrer un transport
+// callsub(StartTransport, source_city, dest_city)
+StartTransport:
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	
+	// Sauvegarder les informations du transport
+	courier_transport_active = 1;
+	courier_transport_source = .@source;
+	courier_transport_dest = .@dest;
+	courier_transport_time = gettimetick(2);
+	
+	// Donner l'item de colis au joueur
+	getitem 7420, 1; // Giftbox (item visuel pour représenter le colis)
+	
+	// Démarrer le timer d'événements
+	addtimer getvariableofnpc(.EventCheckDelay, "CourierConfig") * 1000, strnpcinfo(0) + "::OnEventCheck";
+	
+	return 1;
+
+// Vérifier et déclencher des événements aléatoires
+OnEventCheck:
+	// Vérifier si le joueur est toujours en transport
+	if (courier_transport_active == 0) end;
+	
+	// Vérifier si le joueur a toujours le colis
+	if (countitem(7420) < 1) {
+		mes getvariableofnpc(.SystemName$, "CourierConfig");
+		mes "Vous avez perdu le colis ! Mission annulée.";
+		callsub(CancelTransport);
+		end;
+	}
+	
+	// Chance de déclencher un événement
+	if (rand(1, 100) <= getvariableofnpc(.EventChance, "CourierConfig")) {
+		callsub(TriggerRandomEvent);
+	}
+	
+	// Relancer le timer si toujours en transport
+	if (courier_transport_active == 1) {
+		addtimer getvariableofnpc(.EventCheckDelay, "CourierConfig") * 1000, strnpcinfo(0) + "::OnEventCheck";
+	}
+	
+	end;
+
+// Déclencher un événement aléatoire
+// callsub(TriggerRandomEvent)
+TriggerRandomEvent:
+	.@event_type = rand(1, 5);
+	
+	switch (.@event_type) {
+		case 1: // Attaque de bandits
+			callsub(EventBandits);
+			break;
+		case 2: // Tempête
+			callsub(EventStorm);
+			break;
+		case 3: // Rencontre avec un marchand
+			callsub(EventMerchant);
+			break;
+		case 4: // Bon vent (bonus)
+			callsub(EventGoodWind);
+			break;
+		case 5: // Mendiant
+			callsub(EventBeggar);
+			break;
+	}
+	
+	return 1;
+
+// Événement: Attaque de bandits
+EventBandits:
+	mes getvariableofnpc(.SystemName$, "CourierConfig");
+	mes "^FF0000Des bandits vous attaquent !^000000";
+	mes "Défendez votre cargaison !";
+	close2;
+	
+	// Spawn des monstres autour du joueur
+	.@map$ = strcharinfo(3);
+	.@x = getcharid(3) ? getmapxy(.@x, .@y, 0) : 0;
+	
+	.@monster_count = getvariableofnpc(.MonsterCount, "CourierConfig");
+	for (.@i = 0; .@i < .@monster_count; .@i++) {
+		.@mob_id = getvariableofnpc(.EventMonsters[rand(getarraysize(getvariableofnpc(.EventMonsters, "CourierConfig")))], "CourierConfig");
+		monster .@map$, .@x + rand(-3, 3), .@y + rand(-3, 3), "Bandit", .@mob_id, 1;
+	}
+	
+	return 1;
+
+// Événement: Tempête
+EventStorm:
+	dispbottom "Une tempête se lève ! Vous avancez plus lentement...";
+	sc_start SC_DECREASEAGI, 60000, 10;
+	return 1;
+
+// Événement: Marchand itinérant
+EventMerchant:
+	mes getvariableofnpc(.SystemName$, "CourierConfig");
+	mes "Vous croisez un marchand itinérant !";
+	mes "Il vous offre un petit cadeau pour votre voyage.";
+	
+	.@bonus_item = rand(1, 3);
+	switch (.@bonus_item) {
+		case 1: getitem 504, 3; mes "^00AA00Vous recevez 3 White Potion !^000000"; break;
+		case 2: getitem 506, 2; mes "^00AA00Vous recevez 2 Green Potion !^000000"; break;
+		case 3: getitem 645, 1; mes "^00AA00Vous recevez 1 Concentration Potion !^000000"; break;
+	}
+	
+	close;
+
+// Événement: Bon vent
+EventGoodWind:
+	dispbottom "Le vent souffle dans votre direction ! Vous avancez plus vite !";
+	sc_start SC_INCREASEAGI, 60000, 10;
+	percentheal 10, 10;
+	return 1;
+
+// Événement: Mendiant
+EventBeggar:
+	mes getvariableofnpc(.SystemName$, "CourierConfig");
+	mes "Un mendiant vous demande l'aumône...";
+	next;
+	
+	if (select("Lui donner 500 zeny:Refuser") == 1) {
+		if (Zeny >= 500) {
+			Zeny -= 500;
+			mes "Le mendiant vous remercie chaleureusement.";
+			mes "^00AA00Vous gagnez un bonus de chance !^000000";
+			sc_start SC_INCREASEAGI, 120000, 5;
+			getexp getvariableofnpc(.BaseExp, "CourierConfig") / 2, 0;
+		} else {
+			mes "Vous n'avez pas assez d'argent...";
+		}
+	} else {
+		mes "Le mendiant soupire et reprend sa route.";
+	}
+	
+	close;
+
+// Compléter une livraison
+// callsub(CompleteDelivery, source_city, dest_city)
+CompleteDelivery:
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	
+	// Vérifier si le joueur a le colis
+	if (countitem(7420) < 1) {
+		mes getvariableofnpc(.SystemName$, "CourierConfig");
+		mes "Vous n'avez pas de colis à livrer !";
+		close;
+	}
+	
+	// Retirer le colis
+	delitem 7420, 1;
+	
+	// Obtenir le rang et la prospérité
+	.@rank = callfunc("CourierDatabase::GetPlayerRank");
+	.@prosperity = $CourierCityProsperity[.@dest];
+	
+	// Calculer les récompenses
+	.@reward = callsub(CalculateReward, .@source, .@dest, .@rank, .@prosperity);
+	.@exp = callsub(CalculateExp, .@source, .@dest, .@rank);
+	
+	// Donner les récompenses
+	Zeny += .@reward;
+	getexp .@exp, 0;
+	
+	// Incrémenter le compteur de livraisons
+	callfunc("CourierDatabase::IncrementDeliveries");
+	
+	// Vérifier si nouveau rang
+	.@new_rank = callfunc("CourierDatabase::GetPlayerRank");
+	if (.@new_rank > .@rank) {
+		.@rank_name$ = callfunc("CourierDatabase::GetRankName", .@new_rank);
+		announce strcharinfo(0) + " a atteint le rang de " + .@rank_name$ + " !", bc_self, 0xFFFF00;
+	}
+	
+	// Afficher le résumé
+	mes getvariableofnpc(.SystemName$, "CourierConfig");
+	mes "^00AA00Livraison effectuée avec succès !^000000";
+	mes " ";
+	mes "Récompenses:";
+	mes "- ^0066FF" + .@reward + " Zeny^000000";
+	mes "- ^FF6600" + .@exp + " EXP^000000";
+	mes " ";
+	mes "Total de livraisons: ^00AA00" + courier_deliveries + "^000000";
+	
+	// Réinitialiser le statut de transport
+	courier_transport_active = 0;
+	courier_transport_source = 0;
+	courier_transport_dest = 0;
+	
+	close;
+
+// Annuler un transport
+// callsub(CancelTransport)
+CancelTransport:
+	courier_transport_active = 0;
+	courier_transport_source = 0;
+	courier_transport_dest = 0;
+	
+	// Retirer le colis si présent
+	if (countitem(7420) > 0)
+		delitem 7420, 1;
+	
+	return 1;
+
+end;
+}

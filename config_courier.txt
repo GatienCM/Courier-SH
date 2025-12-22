@@ -1,0 +1,132 @@
+//===================================================================
+//= Configuration du Système de Coursier
+//===================================================================
+//= Paramètres globaux du système de transport de marchandises
+//===================================================================
+
+-	script	CourierConfig	FAKE_NPC,{
+OnInit:
+	// ============================================
+	// CONFIGURATION DES RANGS DE TRANSPORTEUR
+	// ============================================
+	
+	// Noms des rangs
+	setarray .RankNames$[0], "Apprenti Coursier", "Coursier", "Transporteur", "Caravannier", "Maître Marchand";
+	
+	// Livraisons requises pour chaque rang (cumulatif)
+	setarray .RankRequirements[0], 0, 10, 30, 60, 100;
+	
+	// Bonus de récompense par rang (%)
+	setarray .RankBonus[0], 0, 10, 20, 35, 50;
+	
+	// ============================================
+	// CONFIGURATION DES VILLES
+	// ============================================
+	
+	// Identifiants des villes (0-4)
+	// 0 = Prontera, 1 = Payon, 2 = Geffen, 3 = Alberta, 4 = Morocc
+	
+	// Noms des villes
+	setarray .CityNames$[0], "Prontera", "Payon", "Geffen", "Alberta", "Morocc";
+	
+	// Coordonnées des villes (x, y alternés)
+	setarray .CityCoords[0], 
+		155, 185,  // Prontera
+		152, 75,   // Payon
+		120, 60,   // Geffen
+		117, 56,   // Alberta
+		162, 97;   // Morocc
+	
+	// Noms des cartes des villes
+	setarray .CityMaps$[0], "prontera", "payon", "geffen", "alberta", "morocc";
+	
+	// ============================================
+	// CONFIGURATION DES RESSOURCES
+	// ============================================
+	
+	// IDs des items de ressource par ville
+	setarray .CityResources[0], 
+		577,   // Prontera: Flour (Farine/Blé)
+		7020,  // Payon: Silk (Soie)
+		7321,  // Geffen: Crystal Fragment (Fragment de Cristal)
+		544,   // Alberta: Raw Fish (Poisson)
+		7053;  // Morocc: Spice (Épice)
+	
+	// Noms des ressources
+	setarray .ResourceNames$[0], "Farine de Blé", "Soie Précieuse", "Fragment de Cristal", "Poisson Frais", "Épice Exotique";
+	
+	// Quantité nécessaire pour créer un colis
+	.PackageResourceCost = 5;
+	
+	// ============================================
+	// CONFIGURATION DE LA PROSPÉRITÉ
+	// ============================================
+	
+	// Niveaux de prospérité (0-5)
+	.MaxProsperityLevel = 5;
+	
+	// Ressources nécessaires pour améliorer la prospérité
+	// (nombre de TYPES de ressources différentes nécessaires)
+	setarray .ProsperityResourceReq[0], 0, 50, 100, 200, 350, 500;
+	
+	// Bonus de récompense par niveau de prospérité (%)
+	setarray .ProsperityBonus[0], 0, 15, 30, 50, 75, 100;
+	
+	// ============================================
+	// CONFIGURATION DE LA PRODUCTION
+	// ============================================
+	
+	// Taux de production automatique (ressources -> colis)
+	.ProductionRate = 10; // Toutes les X ressources = 1 colis
+	
+	// Limite de colis par ville
+	.MaxPackages = 50;
+	
+	// Temps entre chaque cycle de production (en secondes)
+	.ProductionCycle = 1800; // 30 minutes
+	
+	// ============================================
+	// CONFIGURATION DES RÉCOMPENSES
+	// ============================================
+	
+	// Récompense de base par livraison (zeny)
+	.BaseReward = 5000;
+	
+	// Bonus par "unité de distance"
+	// La distance est calculée par rapport aux indices des villes
+	.DistanceBonus = 2000;
+	
+	// Points d'expérience de base
+	.BaseExp = 1000;
+	
+	// ============================================
+	// CONFIGURATION DES ÉVÉNEMENTS
+	// ============================================
+	
+	// Chance d'événement pendant le transport (%)
+	.EventChance = 25;
+	
+	// Délai entre les vérifications d'événements (secondes)
+	.EventCheckDelay = 60;
+	
+	// IDs des monstres pour événements hostiles
+	setarray .EventMonsters[0], 1031, 1063, 1109; // Pecopeco, Lunatic, Deviruchi
+	
+	// Nombre de monstres à spawn
+	.MonsterCount = 3;
+	
+	// ============================================
+	// CONFIGURATION DU SHOP
+	// ============================================
+	
+	// Prix d'achat des ressources dans les boutiques
+	.ResourcePrice = 1000;
+	
+	// ============================================
+	// MESSAGES SYSTÈME
+	// ============================================
+	
+	.SystemName$ = "^FF6600[Système de Coursier]^000000";
+	
+	end;
+}
