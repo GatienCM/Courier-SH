@@ -31,7 +31,7 @@
 	function	F_RandEvent {
 		.@roll = rand(100);
 		if (.@roll < .BanditChance) {
-			.@map$ = strcharinfo(3); .@x = posx; .@y = posy;
+			getmapxy(.@map$, .@x, .@y, 0);
 			for (.@i=0; .@i<.BanditCount; .@i++)
 				monster .@map$, .@x+rand(-2,2), .@y+rand(-2,2), "Bandit", .BanditMob, 1;
 			dispbottom "[Colis] Des bandits surgissent !";

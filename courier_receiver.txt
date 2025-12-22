@@ -5,7 +5,8 @@
 	mes "[Agent local]";
 	if (!T_HAS_PARCEL || countitem(12000) < 1) { mes "Pas de colis."; close; }
 
-	.@here$   = strcharinfo(3);
+	.@here$   = strtolower(replacestr(strnpcinfo(1), "Receiver_", ""));
+	if (callfunc("F_CityIndex", .@here$) < 0) { mes "Ville non gérée ici."; close; }
 	.@origin$ = T_PARCEL_ORIGIN$;
 
 	if (.@here$ == .@origin$) { mes "Ce colis vient d'ici. Livre-le ailleurs."; close; }
@@ -14,6 +15,7 @@
 	if (select("Oui:Non")==2) close;
 
 	.@oIdx   = callfunc("F_CityIndex", .@origin$);
+	if (.@oIdx < 0) { mes "Colis invalide."; close; }
 	.@resIdx = getd("Courier_Controller::ProdType["+.@oIdx+"]"); // ressource liée à l'origine
 
 	delitem 12000,1;

@@ -20,7 +20,7 @@ sh_fild01,  221,159,4  duplicate(Courier_Hub)  Hub_Geffen    4_F_EDEN_MASTER
 		close;
 	}
 
-	.@city$ = strcharinfo(3);
+	.@city$ = strtolower(replacestr(strnpcinfo(1), "Hub_", ""));
 	if (callfunc("F_CityIndex", .@city$) < 0) { mes "Ville non gérée."; close; }
 
 	if (getd("PSTOCK_"+.@city$) <= 0) {
