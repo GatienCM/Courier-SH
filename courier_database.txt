@@ -1,7 +1,7 @@
 //===================================================================
 //= Base de Données du Système de Coursier
 //===================================================================
-//= Gestion des données économiques des villes et des joueurs
+//= Gestion des données économiques des villes (initialisation et production)
 //===================================================================
 
 -	script	CourierDatabase	FAKE_NPC,{
@@ -34,140 +34,6 @@ OnInit:
 	donpcevent "CourierDatabase::OnProductionCycle";
 	
 	end;
-
-// ============================================
-// FONCTIONS DE GESTION DES RESSOURCES
-// ============================================
-
-// Ajouter des ressources à une ville
-// callsub(AddCityResource, city_id, amount)
-AddCityResource:
-	.@city = getarg(0);
-	.@amount = getarg(1);
-	
-	$CourierCityResources[.@city] += .@amount;
-	
-	return 1;
-
-// Retirer des ressources d'une ville
-// callsub(RemoveCityResource, city_id, amount)
-RemoveCityResource:
-	.@city = getarg(0);
-	.@amount = getarg(1);
-	
-	if ($CourierCityResources[.@city] < .@amount)
-		return 0; // Pas assez de ressources
-	
-	$CourierCityResources[.@city] -= .@amount;
-	return 1;
-
-// ============================================
-// FONCTIONS DE GESTION DES COLIS
-// ============================================
-
-// Ajouter un colis à une ville
-// callsub(AddCityPackage, city_id, amount)
-AddCityPackage:
-	.@city = getarg(0);
-	.@amount = getarg(1);
-	
-	if ($CourierCityPackages[.@city] + .@amount > getvariableofnpc(.MaxPackages, "CourierConfig"))
-		return 0; // Limite atteinte
-	
-	$CourierCityPackages[.@city] += .@amount;
-	return 1;
-
-// Retirer un colis d'une ville
-// callsub(RemoveCityPackage, city_id)
-RemoveCityPackage:
-	.@city = getarg(0);
-	
-	if ($CourierCityPackages[.@city] < 1)
-		return 0; // Pas de colis disponible
-	
-	$CourierCityPackages[.@city] -= 1;
-	return 1;
-
-// ============================================
-// FONCTIONS DE GESTION DE LA PROSPÉRITÉ
-// ============================================
-
-// Ajouter une contribution pour la prospérité
-// callsub(AddContribution, city_id, resource_type, amount)
-AddContribution:
-	.@city = getarg(0);
-	.@resource_type = getarg(1);
-	.@amount = getarg(2);
-	
-	$CourierCityContributions[.@city * 5 + .@resource_type] += .@amount;
-	
-	// Vérifier si on peut améliorer la prospérité
-	callsub(CheckProsperityUpgrade, .@city);
-	
-	return 1;
-
-// Vérifier et améliorer la prospérité si possible
-// callsub(CheckProsperityUpgrade, city_id)
-CheckProsperityUpgrade:
-	.@city = getarg(0);
-	.@current_level = $CourierCityProsperity[.@city];
-	
-	if (.@current_level >= getvariableofnpc(.MaxProsperityLevel, "CourierConfig"))
-		return 0; // Niveau max atteint
-	
-	// Vérifier si toutes les ressources ont atteint le seuil
-	.@required = getvariableofnpc(.ProsperityResourceReq[.@current_level], "CourierConfig");
-	.@can_upgrade = 1;
-	
-	for (.@i = 0; .@i < 5; .@i++) {
-		if ($CourierCityContributions[.@city * 5 + .@i] < .@required) {
-			.@can_upgrade = 0;
-			break;
-		}
-	}
-	
-	if (.@can_upgrade) {
-		// Améliorer la prospérité
-		$CourierCityProsperity[.@city] += 1;
-		
-		// Réinitialiser les contributions
-		for (.@i = 0; .@i < 5; .@i++) {
-			$CourierCityContributions[.@city * 5 + .@i] = 0;
-		}
-		
-		// Annoncer l'amélioration
-		.@city_name$ = getvariableofnpc(.CityNames$[.@city], "CourierConfig");
-		announce "La ville de " + .@city_name$ + " a atteint le niveau de prospérité " + $CourierCityProsperity[.@city] + " !", bc_all, 0x00FF00;
-		
-		return 1;
-	}
-	
-	return 0;
-
-// ============================================
-// FONCTIONS DE GESTION DES JOUEURS
-// ============================================
-
-// Obtenir le rang du joueur
-// callsub(GetPlayerRank)
-GetPlayerRank:
-	.@deliveries = courier_deliveries;
-	.@rank = 0;
-	
-	for (.@i = 4; .@i >= 0; .@i--) {
-		if (.@deliveries >= getvariableofnpc(.RankRequirements[.@i], "CourierConfig")) {
-			.@rank = .@i;
-			break;
-		}
-	}
-	
-	return .@rank;
-
-// Augmenter le compteur de livraisons
-// callsub(IncrementDeliveries)
-IncrementDeliveries:
-	courier_deliveries += 1;
-	return courier_deliveries;
 
 // ============================================
 // PRODUCTION AUTOMATIQUE
@@ -203,42 +69,6 @@ OnProductionCycle:
 	.@cycle_time = getvariableofnpc(.ProductionCycle, "CourierConfig");
 	sleep .@cycle_time * 1000;
 	goto OnProductionCycle;
-
-// ============================================
-// FONCTIONS D'INFORMATION
-// ============================================
-
-// Obtenir le nom du rang
-// callsub(GetRankName, rank_id)
-GetRankName:
-	.@rank = getarg(0);
-	return getvariableofnpc(.RankNames$[.@rank], "CourierConfig");
-
-// Obtenir les infos d'une ville
-// callsub(GetCityInfo, city_id)
-GetCityInfo:
-	.@city = getarg(0);
-	
-	mes "^0066FF=== Informations sur " + getvariableofnpc(.CityNames$[.@city], "CourierConfig") + " ===^000000";
-	mes "Ressources disponibles: ^00AA00" + $CourierCityResources[.@city] + "^000000";
-	mes "Colis en attente: ^00AA00" + $CourierCityPackages[.@city] + "^000000";
-	mes "Niveau de prospérité: ^FF6600" + $CourierCityProsperity[.@city] + "^000000";
-	mes " ";
-	
-	// Afficher les contributions
-	.@current_level = $CourierCityProsperity[.@city];
-	if (.@current_level < getvariableofnpc(.MaxProsperityLevel, "CourierConfig")) {
-		mes "^0066FFContributions pour le prochain niveau:^000000";
-		.@required = getvariableofnpc(.ProsperityResourceReq[.@current_level], "CourierConfig");
-		
-		for (.@i = 0; .@i < 5; .@i++) {
-			.@contrib = $CourierCityContributions[.@city * 5 + .@i];
-			.@resource_name$ = getvariableofnpc(.ResourceNames$[.@i], "CourierConfig");
-			mes .@resource_name$ + ": ^00AA00" + .@contrib + "^000000 / ^FF6600" + .@required + "^000000";
-		}
-	}
-	
-	return 1;
 
 end;
 }

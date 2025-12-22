@@ -17,8 +17,8 @@ prontera,155,185,4	script	Maître des Coursiers#pr	47,{
 	next;
 	
 	// Afficher le rang du joueur
-	.@rank = callfunc("CourierDatabase::GetPlayerRank");
-	.@rank_name$ = callfunc("CourierDatabase::GetRankName", .@rank);
+	.@rank = callfunc("GetPlayerRank");
+	.@rank_name$ = callfunc("GetRankName", .@rank);
 	mes "[Maître Aldric]";
 	mes "Votre rang actuel: ^0066FF" + .@rank_name$ + "^000000";
 	mes "Livraisons effectuées: ^00AA00" + courier_deliveries + "^000000";
@@ -41,7 +41,7 @@ prontera,155,185,4	script	Maître des Coursiers#pr	47,{
 			callsub(TakePackage, .@city_id);
 			break;
 		case 2:
-			callfunc("CourierDatabase::GetCityInfo", .@city_id);
+			callfunc("GetCityInfo", .@city_id);
 			close;
 		case 3:
 			mes "[Maître Aldric]";
@@ -97,10 +97,10 @@ TakePackage:
 	}
 	
 	// Retirer le colis de la ville
-	callfunc("CourierDatabase::RemoveCityPackage", .@source_city);
+	callfunc("RemoveCityPackage", .@source_city);
 	
 	// Démarrer le transport
-	callfunc("CourierRewards::StartTransport", .@source_city, .@dest_city);
+	callfunc("StartTransport", .@source_city, .@dest_city);
 	
 	.@dest_name$ = getvariableofnpc(.CityNames$[.@dest_city], "CourierConfig");
 	mes "[Maître Aldric]";
@@ -139,7 +139,7 @@ prontera,150,185,4	script	Responsable des Stocks#pr	47,{
 			callsub(DepositContribution, .@city_id);
 			break;
 		case 3:
-			callfunc("CourierDatabase::GetCityInfo", .@city_id);
+			callfunc("GetCityInfo", .@city_id);
 			close;
 		case 4:
 			mes "[Gérard]";
@@ -172,7 +172,7 @@ DepositLocal:
 	delitem .@resource_id, .@amount;
 	
 	// Ajouter aux ressources de la ville
-	callfunc("CourierDatabase::AddCityResource", .@city_id, .@amount);
+	callfunc("AddCityResource", .@city_id, .@amount);
 	
 	mes "[Gérard]";
 	mes "Merci pour votre contribution !";
@@ -222,7 +222,7 @@ DepositContribution:
 	delitem .@resource_id, .@amount;
 	
 	// Ajouter à la contribution
-	callfunc("CourierDatabase::AddContribution", .@city_id, .@choice, .@amount);
+	callfunc("AddContribution", .@city_id, .@choice, .@amount);
 	
 	mes "[Gérard]";
 	mes "Merci pour votre contribution !";
@@ -256,7 +256,7 @@ prontera,160,185,4	script	Agent de Livraison#pr	47,{
 	}
 	
 	// Compléter la livraison
-	callfunc("CourierRewards::CompleteDelivery", courier_transport_source, courier_transport_dest);
+	callfunc("CompleteDelivery", courier_transport_source, courier_transport_dest);
 	
 	end;
 }

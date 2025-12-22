@@ -39,7 +39,7 @@ geffen,120,60,4	script	Maître des Coursiers#gf	47,{
 			callsub(TakePackage, .@city_id);
 			break;
 		case 2:
-			callfunc("CourierDatabase::GetCityInfo", .@city_id);
+			callfunc("GetCityInfo", .@city_id);
 			close;
 		case 3:
 			mes "[Archiviste Thaddeus]";
@@ -90,8 +90,8 @@ TakePackage:
 		close;
 	}
 	
-	callfunc("CourierDatabase::RemoveCityPackage", .@source_city);
-	callfunc("CourierRewards::StartTransport", .@source_city, .@dest_city);
+	callfunc("RemoveCityPackage", .@source_city);
+	callfunc("StartTransport", .@source_city, .@dest_city);
 	
 	.@dest_name$ = getvariableofnpc(.CityNames$[.@dest_city], "CourierConfig");
 	mes "[Archiviste Thaddeus]";
@@ -124,7 +124,7 @@ geffen,115,60,4	script	Responsable des Stocks#gf	47,{
 			callsub(DepositContribution, .@city_id);
 			break;
 		case 3:
-			callfunc("CourierDatabase::GetCityInfo", .@city_id);
+			callfunc("GetCityInfo", .@city_id);
 			close;
 		case 4:
 			close;
@@ -151,7 +151,7 @@ DepositLocal:
 	}
 	
 	delitem .@resource_id, .@amount;
-	callfunc("CourierDatabase::AddCityResource", .@city_id, .@amount);
+	callfunc("AddCityResource", .@city_id, .@amount);
 	
 	mes "[Apprenti Magnus]";
 	mes "Merci pour votre contribution !";
@@ -191,7 +191,7 @@ DepositContribution:
 	}
 	
 	delitem .@resource_id, .@amount;
-	callfunc("CourierDatabase::AddContribution", .@city_id, .@choice, .@amount);
+	callfunc("AddContribution", .@city_id, .@choice, .@amount);
 	
 	mes "[Apprenti Magnus]";
 	mes "Merci pour votre contribution !";
@@ -222,7 +222,7 @@ geffen,125,60,4	script	Agent de Livraison#gf	47,{
 		close;
 	}
 	
-	callfunc("CourierRewards::CompleteDelivery", courier_transport_source, courier_transport_dest);
+	callfunc("CompleteDelivery", courier_transport_source, courier_transport_dest);
 	
 	end;
 }

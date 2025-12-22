@@ -1,0 +1,321 @@
+//===================================================================
+//= Fonctions Globales du Système de Coursier
+//===================================================================
+//= Fonctions appelables depuis n'importe quel script
+//===================================================================
+
+// ============================================
+// FONCTIONS DE GESTION DES RESSOURCES
+// ============================================
+
+// Ajouter des ressources à une ville
+function	script	AddCityResource	{
+	.@city = getarg(0);
+	.@amount = getarg(1);
+	
+	$CourierCityResources[.@city] += .@amount;
+	return 1;
+}
+
+// Retirer des ressources d'une ville
+function	script	RemoveCityResource	{
+	.@city = getarg(0);
+	.@amount = getarg(1);
+	
+	if ($CourierCityResources[.@city] < .@amount)
+		return 0;
+	
+	$CourierCityResources[.@city] -= .@amount;
+	return 1;
+}
+
+// ============================================
+// FONCTIONS DE GESTION DES COLIS
+// ============================================
+
+// Ajouter un colis à une ville
+function	script	AddCityPackage	{
+	.@city = getarg(0);
+	.@amount = getarg(1);
+	
+	if ($CourierCityPackages[.@city] + .@amount > getvariableofnpc(.MaxPackages, "CourierConfig"))
+		return 0;
+	
+	$CourierCityPackages[.@city] += .@amount;
+	return 1;
+}
+
+// Retirer un colis d'une ville
+function	script	RemoveCityPackage	{
+	.@city = getarg(0);
+	
+	if ($CourierCityPackages[.@city] < 1)
+		return 0;
+	
+	$CourierCityPackages[.@city] -= 1;
+	return 1;
+}
+
+// ============================================
+// FONCTIONS DE GESTION DE LA PROSPÉRITÉ
+// ============================================
+
+// Ajouter une contribution pour la prospérité
+function	script	AddContribution	{
+	.@city = getarg(0);
+	.@resource_type = getarg(1);
+	.@amount = getarg(2);
+	
+	$CourierCityContributions[.@city * 5 + .@resource_type] += .@amount;
+	
+	// Vérifier si on peut améliorer la prospérité
+	callfunc("CheckProsperityUpgrade", .@city);
+	
+	return 1;
+}
+
+// Vérifier et améliorer la prospérité si possible
+function	script	CheckProsperityUpgrade	{
+	.@city = getarg(0);
+	.@current_level = $CourierCityProsperity[.@city];
+	
+	if (.@current_level >= getvariableofnpc(.MaxProsperityLevel, "CourierConfig"))
+		return 0;
+	
+	// Vérifier si toutes les ressources ont atteint le seuil
+	.@required = getvariableofnpc(.ProsperityResourceReq[.@current_level], "CourierConfig");
+	.@can_upgrade = 1;
+	
+	for (.@i = 0; .@i < 5; .@i++) {
+		if ($CourierCityContributions[.@city * 5 + .@i] < .@required) {
+			.@can_upgrade = 0;
+			break;
+		}
+	}
+	
+	if (.@can_upgrade) {
+		// Améliorer la prospérité
+		$CourierCityProsperity[.@city] += 1;
+		
+		// Réinitialiser les contributions
+		for (.@i = 0; .@i < 5; .@i++) {
+			$CourierCityContributions[.@city * 5 + .@i] = 0;
+		}
+		
+		// Annoncer l'amélioration
+		.@city_name$ = getvariableofnpc(.CityNames$[.@city], "CourierConfig");
+		announce "La ville de " + .@city_name$ + " a atteint le niveau de prospérité " + $CourierCityProsperity[.@city] + " !", bc_all, 0x00FF00;
+		
+		return 1;
+	}
+	
+	return 0;
+}
+
+// ============================================
+// FONCTIONS DE GESTION DES JOUEURS
+// ============================================
+
+// Obtenir le rang du joueur
+function	script	GetPlayerRank	{
+	.@deliveries = courier_deliveries;
+	.@rank = 0;
+	
+	for (.@i = 4; .@i >= 0; .@i--) {
+		if (.@deliveries >= getvariableofnpc(.RankRequirements[.@i], "CourierConfig")) {
+			.@rank = .@i;
+			break;
+		}
+	}
+	
+	return .@rank;
+}
+
+// Obtenir le nom du rang
+function	script	GetRankName	{
+	.@rank = getarg(0);
+	return getvariableofnpc(.RankNames$[.@rank], "CourierConfig");
+}
+
+// Augmenter le compteur de livraisons
+function	script	IncrementDeliveries	{
+	courier_deliveries += 1;
+	return courier_deliveries;
+}
+
+// ============================================
+// FONCTIONS D'INFORMATION
+// ============================================
+
+// Obtenir les infos d'une ville
+function	script	GetCityInfo	{
+	.@city = getarg(0);
+	
+	mes "^0066FF=== Informations sur " + getvariableofnpc(.CityNames$[.@city], "CourierConfig") + " ===^000000";
+	mes "Ressources disponibles: ^00AA00" + $CourierCityResources[.@city] + "^000000";
+	mes "Colis en attente: ^00AA00" + $CourierCityPackages[.@city] + "^000000";
+	mes "Niveau de prospérité: ^FF6600" + $CourierCityProsperity[.@city] + "^000000";
+	mes " ";
+	
+	// Afficher les contributions
+	.@current_level = $CourierCityProsperity[.@city];
+	if (.@current_level < getvariableofnpc(.MaxProsperityLevel, "CourierConfig")) {
+		mes "^0066FFContributions pour le prochain niveau:^000000";
+		.@required = getvariableofnpc(.ProsperityResourceReq[.@current_level], "CourierConfig");
+		
+		for (.@i = 0; .@i < 5; .@i++) {
+			.@contrib = $CourierCityContributions[.@city * 5 + .@i];
+			.@resource_name$ = getvariableofnpc(.ResourceNames$[.@i], "CourierConfig");
+			mes .@resource_name$ + ": ^00AA00" + .@contrib + "^000000 / ^FF6600" + .@required + "^000000";
+		}
+	}
+	
+	return 1;
+}
+
+// ============================================
+// FONCTIONS DE CALCUL DES RÉCOMPENSES
+// ============================================
+
+// Calculer la récompense pour une livraison
+function	script	CalculateReward	{
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	.@rank = getarg(2);
+	.@prosperity = getarg(3);
+	
+	// Récompense de base
+	.@reward = getvariableofnpc(.BaseReward, "CourierConfig");
+	
+	// Calculer la distance (différence d'indices)
+	.@distance = (.@dest - .@source);
+	if (.@distance < 0) .@distance = -.@distance;
+	
+	// Bonus de distance
+	.@distance_bonus = .@distance * getvariableofnpc(.DistanceBonus, "CourierConfig");
+	.@reward += .@distance_bonus;
+	
+	// Bonus de rang
+	.@rank_bonus_pct = getvariableofnpc(.RankBonus[.@rank], "CourierConfig");
+	.@reward += (.@reward * .@rank_bonus_pct / 100);
+	
+	// Bonus de prospérité
+	.@prosperity_bonus_pct = getvariableofnpc(.ProsperityBonus[.@prosperity], "CourierConfig");
+	.@reward += (.@reward * .@prosperity_bonus_pct / 100);
+	
+	return .@reward;
+}
+
+// Calculer l'expérience pour une livraison
+function	script	CalculateExp	{
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	.@rank = getarg(2);
+	
+	// Expérience de base
+	.@exp = getvariableofnpc(.BaseExp, "CourierConfig");
+	
+	// Calculer la distance
+	.@distance = (.@dest - .@source);
+	if (.@distance < 0) .@distance = -.@distance;
+	
+	// Bonus de distance (50% par unité)
+	.@exp += (.@exp * .@distance * 50 / 100);
+	
+	// Bonus de rang (20% par rang)
+	.@exp += (.@exp * .@rank * 20 / 100);
+	
+	return .@exp;
+}
+
+// ============================================
+// FONCTIONS DE TRANSPORT
+// ============================================
+
+// Démarrer un transport
+function	script	StartTransport	{
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	
+	// Sauvegarder les informations du transport
+	courier_transport_active = 1;
+	courier_transport_source = .@source;
+	courier_transport_dest = .@dest;
+	courier_transport_time = gettimetick(2);
+	
+	// Donner l'item de colis au joueur
+	getitem 7420, 1; // Giftbox
+	
+	// Démarrer le timer d'événements
+	addtimer getvariableofnpc(.EventCheckDelay, "CourierConfig") * 1000, "CourierEvents::OnEventCheck";
+	
+	return 1;
+}
+
+// Annuler un transport
+function	script	CancelTransport	{
+	courier_transport_active = 0;
+	courier_transport_source = 0;
+	courier_transport_dest = 0;
+	
+	// Retirer le colis si présent
+	if (countitem(7420) > 0)
+		delitem 7420, 1;
+	
+	return 1;
+}
+
+// Compléter une livraison
+function	script	CompleteDelivery	{
+	.@source = getarg(0);
+	.@dest = getarg(1);
+	
+	// Vérifier si le joueur a le colis
+	if (countitem(7420) < 1) {
+		mes getvariableofnpc(.SystemName$, "CourierConfig");
+		mes "Vous n'avez pas de colis à livrer !";
+		close;
+	}
+	
+	// Retirer le colis
+	delitem 7420, 1;
+	
+	// Obtenir le rang et la prospérité
+	.@rank = callfunc("GetPlayerRank");
+	.@prosperity = $CourierCityProsperity[.@dest];
+	
+	// Calculer les récompenses
+	.@reward = callfunc("CalculateReward", .@source, .@dest, .@rank, .@prosperity);
+	.@exp = callfunc("CalculateExp", .@source, .@dest, .@rank);
+	
+	// Donner les récompenses
+	Zeny += .@reward;
+	getexp .@exp, 0;
+	
+	// Incrémenter le compteur de livraisons
+	callfunc("IncrementDeliveries");
+	
+	// Vérifier si nouveau rang
+	.@new_rank = callfunc("GetPlayerRank");
+	if (.@new_rank > .@rank) {
+		.@rank_name$ = callfunc("GetRankName", .@new_rank);
+		announce strcharinfo(0) + " a atteint le rang de " + .@rank_name$ + " !", bc_self, 0xFFFF00;
+	}
+	
+	// Afficher le résumé
+	mes getvariableofnpc(.SystemName$, "CourierConfig");
+	mes "^00AA00Livraison effectuée avec succès !^000000";
+	mes " ";
+	mes "Récompenses:";
+	mes "- ^0066FF" + .@reward + " Zeny^000000";
+	mes "- ^FF6600" + .@exp + " EXP^000000";
+	mes " ";
+	mes "Total de livraisons: ^00AA00" + courier_deliveries + "^000000";
+	
+	// Réinitialiser le statut de transport
+	courier_transport_active = 0;
+	courier_transport_source = 0;
+	courier_transport_dest = 0;
+	
+	close;
+}

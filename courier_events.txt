@@ -1,0 +1,113 @@
+//===================================================================
+//= Système d'Événements Aléatoires
+//===================================================================
+//= Gestion des événements pendant le transport
+//===================================================================
+
+-	script	CourierEvents	FAKE_NPC,{
+end;
+
+// Vérifier et déclencher des événements aléatoires
+OnEventCheck:
+	// Vérifier si le joueur est toujours en transport
+	if (courier_transport_active == 0) end;
+	
+	// Vérifier si le joueur a toujours le colis
+	if (countitem(7420) < 1) {
+		mes getvariableofnpc(.SystemName$, "CourierConfig");
+		mes "Vous avez perdu le colis ! Mission annulée.";
+		callfunc("CancelTransport");
+		end;
+	}
+	
+	// Chance de déclencher un événement
+	if (rand(1, 100) <= getvariableofnpc(.EventChance, "CourierConfig")) {
+		donpcevent "CourierEvents::OnTriggerEvent";
+	}
+	
+	// Relancer le timer si toujours en transport
+	if (courier_transport_active == 1) {
+		addtimer getvariableofnpc(.EventCheckDelay, "CourierConfig") * 1000, "CourierEvents::OnEventCheck";
+	}
+	
+	end;
+
+// Déclencher un événement aléatoire
+OnTriggerEvent:
+	.@event_type = rand(1, 5);
+	
+	switch (.@event_type) {
+		case 1: // Attaque de bandits
+			donpcevent "CourierEvents::OnEventBandits";
+			break;
+		case 2: // Tempête
+			donpcevent "CourierEvents::OnEventStorm";
+			break;
+		case 3: // Rencontre avec un marchand
+			donpcevent "CourierEvents::OnEventMerchant";
+			break;
+		case 4: // Bon vent (bonus)
+			donpcevent "CourierEvents::OnEventGoodWind";
+			break;
+		case 5: // Mendiant
+			donpcevent "CourierEvents::OnEventBeggar";
+			break;
+	}
+	
+	end;
+
+// Événement: Attaque de bandits
+OnEventBandits:
+	dispbottom "^FF0000Des bandits vous attaquent ! Défendez votre cargaison !^000000";
+	
+	// Spawn des monstres autour du joueur
+	.@map$ = strcharinfo(3);
+	getmapxy(.@x, .@y, 0);
+	
+	.@monster_count = getvariableofnpc(.MonsterCount, "CourierConfig");
+	for (.@i = 0; .@i < .@monster_count; .@i++) {
+		.@mob_id = getvariableofnpc(.EventMonsters[rand(getarraysize(getvariableofnpc(.EventMonsters, "CourierConfig")))], "CourierConfig");
+		monster .@map$, .@x + rand(-3, 3), .@y + rand(-3, 3), "Bandit", .@mob_id, 1;
+	}
+	
+	end;
+
+// Événement: Tempête
+OnEventStorm:
+	dispbottom "Une tempête se lève ! Vous avancez plus lentement...";
+	sc_start SC_DECREASEAGI, 60000, 10;
+	end;
+
+// Événement: Marchand itinérant
+OnEventMerchant:
+	.@bonus_item = rand(1, 3);
+	switch (.@bonus_item) {
+		case 1: 
+			getitem 504, 3;
+			dispbottom "Un marchand itinérant vous offre 3 White Potion !";
+			break;
+		case 2: 
+			getitem 506, 2;
+			dispbottom "Un marchand itinérant vous offre 2 Green Potion !";
+			break;
+		case 3: 
+			getitem 645, 1;
+			dispbottom "Un marchand itinérant vous offre 1 Concentration Potion !";
+			break;
+	}
+	end;
+
+// Événement: Bon vent
+OnEventGoodWind:
+	dispbottom "Le vent souffle dans votre direction ! Vous avancez plus vite !";
+	sc_start SC_INCREASEAGI, 60000, 10;
+	percentheal 10, 10;
+	end;
+
+// Événement: Mendiant (nécessite interaction)
+OnEventBeggar:
+	// Note: Cet événement nécessite une interaction manuelle
+	// Il sera déclenché via un message pour que le joueur cherche le NPC
+	dispbottom "Un mendiant vous interpelle...";
+	end;
+}
