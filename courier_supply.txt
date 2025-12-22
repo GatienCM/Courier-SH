@@ -6,7 +6,7 @@ sh_fild01, 218,150,4   duplicate(Courier_Supply)  Depot_Geffen    4_M_03
 
 -	script	Courier_Supply	-1,{
 	mes "[Dépot]";
-	.@city$ = strcharinfo(3);
+	.@city$ = strtolower(replacestr(strnpcinfo(1), "Depot_", ""));
 	.@idx = callfunc("F_CityIndex", .@city$);
 	if (.@idx < 0) { mes "Ville non gérée."; close; }
 
