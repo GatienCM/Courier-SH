@@ -7,6 +7,30 @@
 -	script	CourierEvents	FAKE_NPC,{
 end;
 
+// Vérifier au chargement de map si le joueur a un colis orphelin
+OnPCLoadMapEvent:
+	// Si le joueur a un colis mais pas de transport actif (après redémarrage)
+	if (countitem(7420) > 0 && courier_transport_active == 0) {
+		// Vérifier s'il a les variables permanentes sauvegardées
+		if (#courier_source >= 0 && #courier_dest >= 0) {
+			// Restaurer le transport
+			courier_transport_active = 1;
+			courier_transport_source = #courier_source;
+			courier_transport_dest = #courier_dest;
+			courier_transport_time = gettimetick(2);
+			
+			// Relancer le timer
+			addtimer getvariableofnpc(.EventCheckDelay, "CourierConfig") * 1000, "CourierEvents::OnEventCheck";
+			
+			dispbottom "Transport restauré ! Vous transportez un colis vers " + getvariableofnpc(.CityNames$[#courier_dest], "CourierConfig") + ".";
+		} else {
+			// Colis orphelin sans données, le retirer
+			delitem 7420, countitem(7420);
+			dispbottom "Vos colis orphelins ont été retirés suite au redémarrage du serveur.";
+		}
+	}
+	end;
+
 // Vérifier et déclencher des événements aléatoires
 OnEventCheck:
 	// Vérifier si le joueur est toujours en transport

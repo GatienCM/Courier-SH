@@ -16,8 +16,8 @@ alberta,117,56,4	script	Maître des Coursiers#ab	3,{
 	mes "Port de commerce, nous expédions nos meilleurs poissons !";
 	next;
 	
-	.@rank = callfunc("CourierDatabase::GetPlayerRank");
-	.@rank_name$ = callfunc("CourierDatabase::GetRankName", .@rank);
+	.@rank = callfunc("GetPlayerRank");
+	.@rank_name$ = callfunc("GetRankName", .@rank);
 	mes "[Capitaine Lars]";
 	mes "Votre rang actuel: ^0066FF" + .@rank_name$ + "^000000";
 	mes "Livraisons effectuées: ^00AA00" + courier_deliveries + "^000000";

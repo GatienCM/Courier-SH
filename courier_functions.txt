@@ -237,11 +237,15 @@ function	script	StartTransport	{
 	.@source = getarg(0);
 	.@dest = getarg(1);
 	
-	// Sauvegarder les informations du transport
+	// Sauvegarder les informations du transport (temporaire)
 	courier_transport_active = 1;
 	courier_transport_source = .@source;
 	courier_transport_dest = .@dest;
 	courier_transport_time = gettimetick(2);
+	
+	// Sauvegarder de manière permanente (survit aux redémarrages)
+	#courier_source = .@source;
+	#courier_dest = .@dest;
 	
 	// Donner l'item de colis au joueur
 	getitem 7420, 1; // Giftbox
@@ -257,6 +261,10 @@ function	script	CancelTransport	{
 	courier_transport_active = 0;
 	courier_transport_source = 0;
 	courier_transport_dest = 0;
+	
+	// Nettoyer les variables permanentes
+	#courier_source = -1;
+	#courier_dest = -1;
 	
 	// Retirer le colis si présent
 	if (countitem(7420) > 0)
@@ -316,6 +324,10 @@ function	script	CompleteDelivery	{
 	courier_transport_active = 0;
 	courier_transport_source = 0;
 	courier_transport_dest = 0;
+	
+	// Nettoyer les variables permanentes
+	#courier_source = -1;
+	#courier_dest = -1;
 	
 	close;
 }

@@ -16,8 +16,8 @@ morocc,162,97,4	script	Maître des Coursiers#mo	2,{
 	mes "Nos épices sont les plus prisées du royaume !";
 	next;
 	
-	.@rank = callfunc("CourierDatabase::GetPlayerRank");
-	.@rank_name$ = callfunc("CourierDatabase::GetRankName", .@rank);
+	.@rank = callfunc("GetPlayerRank");
+	.@rank_name$ = callfunc("GetRankName", .@rank);
 	mes "[Maître Rashid]";
 	mes "Votre rang actuel: ^0066FF" + .@rank_name$ + "^000000";
 	mes "Livraisons effectuées: ^00AA00" + courier_deliveries + "^000000";
