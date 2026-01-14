@@ -1,35 +1,60 @@
 //===================================================================
 //= Configuration du Système de Coursier
 //===================================================================
-//= Paramètres globaux du système de transport de marchandises
+//= ⚙️ FICHIER DE CONFIGURATION PRINCIPAL
+//= Modifiez les valeurs ci-dessous pour personnaliser le système
+//= Après modification, rechargez avec @reloadscript
 //===================================================================
 
 -	script	CourierConfig	FAKE_NPC,{
 OnInit:
 	// ============================================
-	// CONFIGURATION DES RANGS DE TRANSPORTEUR
+	// 🏆 CONFIGURATION DES RANGS DE TRANSPORTEUR
 	// ============================================
+	// Personnalisez les noms, paliers et bonus des rangs
 	
-	// Noms des rangs
-	setarray .RankNames$[0], "Apprenti Coursier", "Coursier", "Transporteur", "Caravannier", "Maître Marchand";
+	// Noms des rangs (5 rangs au total)
+	setarray .RankNames$[0], 
+		"Apprenti Coursier",    // Rang 0
+		"Coursier",              // Rang 1
+		"Transporteur",          // Rang 2
+		"Caravannier",           // Rang 3
+		"Maître Marchand";       // Rang 4
 	
 	// Livraisons requises pour chaque rang (cumulatif)
-	setarray .RankRequirements[0], 0, 10, 30, 60, 100;
+	setarray .RankRequirements[0], 
+		0,      // Rang 0: dès le début
+		10,     // Rang 1: après 10 livraisons
+		30,     // Rang 2: après 30 livraisons
+		60,     // Rang 3: après 60 livraisons
+		100;    // Rang 4: après 100 livraisons
 	
-	// Bonus de récompense par rang (%)
-	setarray .RankBonus[0], 0, 10, 20, 35, 50;
+	// Bonus de récompense par rang (en %)
+	setarray .RankBonus[0], 
+		0,      // Rang 0: pas de bonus
+		10,     // Rang 1: +10%
+		20,     // Rang 2: +20%
+		35,     // Rang 3: +35%
+		50;     // Rang 4: +50%
 	
 	// ============================================
-	// CONFIGURATION DES VILLES
+	// 🏙️ CONFIGURATION DES VILLES
 	// ============================================
+	// ⚠️ ATTENTION: Si vous modifiez le nombre de villes, vous devez
+	// également créer/modifier les fichiers NPCs correspondants
 	
-	// Identifiants des villes (0-4)
-	// 0 = Prontera, 1 = Payon, 2 = Geffen, 3 = Alberta, 4 = Morocc
+	.TotalCities = 5; // Nombre total de villes (NE PAS CHANGER sans créer de nouveaux NPCs)
 	
-	// Noms des villes
-	setarray .CityNames$[0], "Prontera", "Payon", "Geffen", "Alberta", "Morocc";
+	// Noms des villes (index 0-4)
+	setarray .CityNames$[0], 
+		"Prontera",    // Ville 0
+		"Payon",       // Ville 1
+		"Geffen",      // Ville 2
+		"Alberta",     // Ville 3
+		"Morocc";      // Ville 4
 	
-	// Coordonnées des villes (x, y alternés)
+	// Coordonnées des NPCs principaux (x, y alternés)
+	// Format: x0, y0, x1, y1, x2, y2...
 	setarray .CityCoords[0], 
 		155, 185,  // Prontera
 		152, 75,   // Payon
@@ -37,14 +62,21 @@ OnInit:
 		117, 56,   // Alberta
 		162, 97;   // Morocc
 	
-	// Noms des cartes des villes
-	setarray .CityMaps$[0], "prontera", "payon", "geffen", "alberta", "morocc";
+	// Noms des maps (pour les événements)
+	setarray .CityMaps$[0], 
+		"prontera", 
+		"payon", 
+		"geffen", 
+		"alberta", 
+		"morocc";
 	
 	// ============================================
-	// CONFIGURATION DES RESSOURCES
+	// 📦 CONFIGURATION DES RESSOURCES
 	// ============================================
+	// Chaque ville produit une ressource unique
+	// ⚠️ Les IDs doivent correspondre à des items existants dans item_db
 	
-	// IDs des items de ressource par ville
+	// IDs des items de ressource par ville (dans l'ordre des villes)
 	setarray .CityResources[0], 
 		577,   // Prontera: Flour (Farine/Blé)
 		7020,  // Payon: Silk (Soie)
@@ -52,81 +84,166 @@ OnInit:
 		544,   // Alberta: Raw Fish (Poisson)
 		7053;  // Morocc: Spice (Épice)
 	
-	// Noms des ressources
-	setarray .ResourceNames$[0], "Farine de Blé", "Soie Précieuse", "Fragment de Cristal", "Poisson Frais", "Épice Exotique";
+	// Noms affichés des ressources (pour l'interface)
+	setarray .ResourceNames$[0], 
+		"Farine de Blé", 
+		"Soie Précieuse", 
+		"Fragment de Cristal", 
+		"Poisson Frais", 
+		"Épice Exotique";
 	
-	// Quantité nécessaire pour créer un colis
-	.PackageResourceCost = 5;
+	// 💰 Prix d'achat des ressources dans les boutiques locales
+	.ResourcePrice = 1000; // En Zeny par unité
 	
-	// ============================================
-	// CONFIGURATION DE LA PROSPÉRITÉ
-	// ============================================
-	
-	// Niveaux de prospérité (0-5)
-	.MaxProsperityLevel = 5;
-	
-	// Ressources nécessaires pour améliorer la prospérité
-	// (nombre de TYPES de ressources différentes nécessaires)
-	setarray .ProsperityResourceReq[0], 0, 50, 100, 200, 350, 500;
-	
-	// Bonus de récompense par niveau de prospérité (%)
-	setarray .ProsperityBonus[0], 0, 15, 30, 50, 75, 100;
+	// 📦 ID de l'item utilisé comme colis pendant le transport
+	.PackageItemID = 7420; // Giftbox (doit exister dans item_db)
 	
 	// ============================================
-	// CONFIGURATION DE LA PRODUCTION
+	// 📈 CONFIGURATION DE LA PROSPÉRITÉ
 	// ============================================
+	// La prospérité représente le développement économique d'une ville
+	// Elle augmente quand les joueurs livrent des ressources
+	// Plus la prospérité est élevée, meilleurs sont les bonus de récompenses
 	
-	// Taux de production automatique (ressources -> colis)
-	.ProductionRate = 10; // Toutes les X ressources = 1 colis
+	.TotalLevels = 6; // Nombre de paliers de prospérité (0-5)
 	
-	// Limite de colis par ville
-	.MaxPackages = 50;
+	// Seuils de ressources nécessaires pour atteindre chaque palier
+	// Chaque ville doit accumuler CES montants dans CHACUNE de ses 5 ressources
+	setarray .LevelThreshold[0], 
+		0,    // Palier 0: Débutante (pas de prérequis)
+		50,   // Palier 1: Établie (50 de chaque ressource)
+		100,  // Palier 2: Prospère (100 de chaque ressource)
+		200,  // Palier 3: Florissante (200 de chaque ressource)
+		350,  // Palier 4: Éclatante (350 de chaque ressource)
+		500;  // Palier 5: Légendaire (500 de chaque ressource)
 	
-	// Temps entre chaque cycle de production (en secondes)
-	.ProductionCycle = 1800; // 30 minutes
+	// Noms affichés pour chaque palier de prospérité
+	setarray .LevelNames$[0], 
+		"Débutante", 
+		"Établie", 
+		"Prospère", 
+		"Florissante", 
+		"Éclatante", 
+		"Légendaire";
 	
-	// ============================================
-	// CONFIGURATION DES RÉCOMPENSES
-	// ============================================
+	// Bonus de récompense (en %) appliqué à chaque palier
+	// Ces bonus s'ajoutent aux récompenses de base lors des livraisons
+	// Exemple: 15 = +15% de Zeny et XP
+	setarray .LevelBonus[0], 
+		0,   // Palier 0: Pas de bonus
+		15,  // Palier 1: +15%
+		30,  // Palier 2: +30%
+		50,  // Palier 3: +50%
+		75,  // Palier 4: +75%
+		100; // Palier 5: +100% (double récompense!)
 	
-	// Récompense de base par livraison (zeny)
-	.BaseReward = 5000;
-	
-	// Bonus par "unité de distance"
-	// La distance est calculée par rapport aux indices des villes
-	.DistanceBonus = 2000;
-	
-	// Points d'expérience de base
-	.BaseExp = 1000;
-	
-	// ============================================
-	// CONFIGURATION DES ÉVÉNEMENTS
-	// ============================================
-	
-	// Chance d'événement pendant le transport (%)
-	.EventChance = 25;
-	
-	// Délai entre les vérifications d'événements (secondes)
-	.EventCheckDelay = 60;
-	
-	// IDs des monstres pour événements hostiles
-	setarray .EventMonsters[0], 1031, 1063, 1109; // Pecopeco, Lunatic, Deviruchi
-	
-	// Nombre de monstres à spawn
-	.MonsterCount = 3;
-	
-	// ============================================
-	// CONFIGURATION DU SHOP
-	// ============================================
-	
-	// Prix d'achat des ressources dans les boutiques
-	.ResourcePrice = 1000;
+	// 🎁 Quantité de ressources ajoutées à la prospérité de destination lors d'une livraison
+	.DeliveryContribution = 10; // La ville de destination reçoit 10 unités de la ressource de la ville source
 	
 	// ============================================
-	// MESSAGES SYSTÈME
+	// ⚙️ CONFIGURATION DE LA PRODUCTION
 	// ============================================
+	// Les villes produisent automatiquement des colis à partir de leurs ressources
+	// Ce système simule l'économie locale qui prépare des marchandises
 	
-	.SystemName$ = "^FF6600[Système de Coursier]^000000";
+	// 📊 Taux de production: combien de ressources = 1 colis
+	.ProductionRate = 10; // Il faut 10 ressources brutes pour créer 1 colis livrable
+	
+	// 📦 Limite de stockage de colis par ville
+	.MaxPackages = 50; // Maximum de colis pouvant être stockés dans chaque ville
+	
+	// ⏱️ Cycle de production automatique (en secondes)
+	.ProductionCycle = 1800; // 1800 secondes = 30 minutes entre chaque cycle de production
+	                          // À chaque cycle, si la ville a assez de ressources, elle crée un colis
+	
+	// 🏭 Ressources de départ pour chaque ville (au lancement du serveur)
+	.InitialResources = 10; // Chaque ville commence avec 10 unités de ressources
+	.InitialPackages = 5;   // Chaque ville commence avec 5 colis prêts à être livrés
+	
+	// ============================================
+	// 💰 CONFIGURATION DES RÉCOMPENSES
+	// ============================================
+	// Les joueurs reçoivent Zeny et XP pour chaque livraison réussie
+	// Les récompenses sont calculées selon: Base + (Distance × Bonus) + Rang + Prospérité
+	
+	// 💵 Récompense de base en Zeny par livraison
+	.BaseReward = 5000; // Montant minimum garanti, quelle que soit la destination
+	
+	// 🗺️ Bonus de Zeny par "unité de distance"
+	.DistanceBonus = 2000; // Distance = différence entre les indices des villes
+	                       // Exemple: Prontera(0) vers Morocc(4) = 4 unités × 2000 = +8000z
+	
+	// ⭐ Bonus de Zeny par rang du joueur (en pourcentage)
+	// Les rangs supérieurs gagnent plus (voir section RANGS pour les paliers)
+	setarray .RankRewardBonus[0], 
+		0,   // Rang 0 (Novice): +0%
+		10,  // Rang 1 (Messager): +10%
+		20,  // Rang 2 (Convoyeur): +20%
+		30,  // Rang 3 (Maître): +30%
+		50;  // Rang 4 (Légende): +50%
+	
+	// 📚 Points d'expérience de base par livraison
+	.BaseExp = 1000; // XP minimum gagnée, bonifiée par rang et prospérité
+	
+	// ============================================
+	// 🎲 CONFIGURATION DES ÉVÉNEMENTS ALÉATOIRES
+	// ============================================
+	// Pendant le transport, des événements peuvent survenir pour pimenter le voyage
+	// 5 types d'événements: Bandits (monstres), Tempête (ralentissement), 
+	//                       Marchand (items), Vent Favorable (vitesse), Mendiant (message)
+	
+	// 🎯 Chance qu'un événement se déclenche (en pourcentage)
+	.EventChance = 25; // 25% de chance à chaque vérification
+	
+	// ⏱️ Délai entre les vérifications d'événements (en secondes)
+	.EventCheckDelay = 60; // Vérifie toutes les 60 secondes si un événement survient
+	
+	// 👹 IDs des monstres pour l'événement "Bandits"
+	// ⚠️ Ces IDs doivent correspondre à des monstres existants dans mob_db
+	setarray .EventMonsters[0], 
+		1031,  // Pecopeco
+		1063,  // Lunatic
+		1109;  // Deviruchi
+	
+	// 🗡️ Nombre de monstres à spawn lors de l'événement "Bandits"
+	.MonsterCount = 3; // Spawne 3 monstres aléatoires autour du joueur
+	
+	// 🎁 Items offerts par l'événement "Marchand Généreux"
+	// Le joueur reçoit un item aléatoire de cette liste
+	setarray .MerchantItems[0], 
+		501,   // Red Potion
+		502,   // Orange Potion
+		503;   // Yellow Potion
+	
+	// ============================================
+	// 🏪 CONFIGURATION DES BOUTIQUES
+	// ============================================
+	// Chaque ville a une boutique locale où acheter des ressources spécifiques
+	
+	// 💰 Prix d'achat des ressources dans les boutiques (en Zeny par unité)
+	.ResourcePrice = 1000; // Toutes les ressources coûtent le même prix
+	
+	// ⚠️ Note: Les ressources peuvent uniquement être ACHETÉES dans leur ville d'origine
+	//          Exemple: La Farine ne peut être achetée qu'à Prontera
+	
+	// ============================================
+	// 💬 MESSAGES SYSTÈME
+	// ============================================
+	// Personnalisation de l'affichage des messages
+	
+	.SystemName$ = "^FF6600[Système de Coursier]^000000"; // Préfixe des annonces système (couleur orange)
+	
+	// ============================================
+	// ⚠️ NOTES IMPORTANTES
+	// ============================================
+	// 1. Après modification de ce fichier, utilisez @reloadscript pour appliquer les changements
+	// 2. Les IDs d'items doivent exister dans item_db.yml
+	// 3. Les IDs de monstres doivent exister dans mob_db.yml
+	// 4. Les coordonnées des villes doivent correspondre aux maps existantes
+	// 5. Si vous ajoutez/supprimez des villes, vous devez aussi modifier:
+	//    - courier_database.txt (OnInit)
+	//    - Créer/supprimer les fichiers npc_[ville].txt correspondants
+	//    - Mettre à jour courier_functions.txt si nécessaire
 	
 	end;
 }

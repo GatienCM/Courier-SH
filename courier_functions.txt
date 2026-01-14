@@ -288,6 +288,14 @@ function	script	CompleteDelivery	{
 	// Retirer le colis
 	delitem 7420, 1;
 	
+	// Ajouter 10 ressources de la ville source à la ville destination
+	.@resource_amount = 10;
+	callfunc("AddContribution", .@dest, .@source, .@resource_amount);
+	
+	.@source_name$ = getvariableofnpc(.CityNames$[.@source], "CourierConfig");
+	.@resource_name$ = getvariableofnpc(.ResourceNames$[.@source], "CourierConfig");
+	dispbottom "Vous avez livré " + .@resource_amount + " " + .@resource_name$ + " à la ville !";
+	
 	// Obtenir le rang et la prospérité
 	.@rank = callfunc("GetPlayerRank");
 	.@prosperity = $CourierCityProsperity[.@dest];
