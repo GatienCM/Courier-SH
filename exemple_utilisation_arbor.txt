@@ -1,0 +1,376 @@
+//===================================================================
+//= EXEMPLES D'UTILISATION DU SYSTÈME ARBOR ANCRESSE
+//===================================================================
+//= Ce fichier contient des exemples concrets pour utiliser
+//= le système de débloquage progressif basé sur la prospérité
+//===================================================================
+
+//===================================================================
+//= EXEMPLE 1 : NPC qui se débloque selon Arbor
+//===================================================================
+// Ce NPC n'apparaît que quand Arbor atteint le niveau 3
+
+sh_fild01,160,160,4	script	Sage d'Arbor	4_M_SAGE_C,{
+	// Vérifier le niveau de prospérité d'Arbor
+	if ($ArborProsperityLevel < 3) {
+		mes "[???]";
+		mes "...";
+		close;
+	}
+	
+	mes "[Sage d'Arbor]";
+	mes "Ah, je vois que notre ville";
+	mes "se développe bien !";
+	mes " ";
+	mes "Grâce à votre aide, nous avons";
+	mes "atteint le niveau " + $ArborProsperityLevel + ".";
+	close;
+}
+
+//===================================================================
+//= EXEMPLE 2 : Warp qui se débloque selon un avant-poste
+//===================================================================
+// Ce warp vers un donjon n'est accessible que si l'avant-poste 0
+// (Camp du Nord) a atteint le niveau 5
+
+sh_fild02,120,120,0	script	#vers_donjon_mystique	WARPNPC,2,2,{
+	.@outpostId = 0; // Camp du Nord
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "Le chemin est bloqué par des ruines.";
+		close;
+	}
+	
+	// Vérifier le niveau de l'avant-poste
+	if ($ArborOutpostLevel[.@outpostId] < 5) {
+		mes "[Entrée du Donjon]";
+		mes "Les portes sont scellées.";
+		mes " ";
+		.@deliveries = $ArborOutpostDeliveries[.@outpostId];
+		.@required = getvariableofnpc(.OutpostLevelRequirements[5], "ArborConfig");
+		mes "^777777Le Camp du Nord doit atteindre le niveau 5^000000";
+		mes "^777777Progression : " + .@deliveries + " / " + .@required + " livraisons^000000";
+		close;
+	}
+	
+	mes "[Entrée du Donjon]";
+	mes "Le donjon mystique vous attend.";
+	mes "Voulez-vous entrer ?";
+	next;
+	
+	if (select("Oui", "Non") == 1) {
+		warp "votre_donjon_map", 100, 100; // CHANGEZ ICI
+	}
+	close;
+}
+
+//===================================================================
+//= EXEMPLE 3 : Boutique qui se débloque progressivement
+//===================================================================
+// Cette boutique vend plus d'items selon le niveau de l'avant-poste
+
+sh_fild03,155,155,4	script	Marchand Spécial	4_M_ALCHE_C,{
+	.@outpostId = 1; // Relais de l'Est
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "[Marchand]";
+		mes "Je n'ai rien à vendre pour le moment.";
+		close;
+	}
+	
+	.@level = $ArborOutpostLevel[.@outpostId];
+	
+	mes "[Marchand Spécial]";
+	mes "Bienvenue dans ma boutique !";
+	mes " ";
+	mes "^0099FFNiveau de l'avant-poste : " + .@level + "/10^000000";
+	next;
+	
+	// Menu différent selon le niveau
+	.@menu$ = "Items de base (Niv. 0):";
+	
+	if (.@level >= 3) {
+		.@menu$ += "Items intermédiaires (Niv. 3):";
+	}
+	
+	if (.@level >= 7) {
+		.@menu$ += "Items rares (Niv. 7):";
+	}
+	
+	if (.@level >= 10) {
+		.@menu$ += "Items légendaires (Niv. 10):";
+	}
+	
+	.@menu$ += "Quitter";
+	
+	switch(select(.@menu$)) {
+	case 1:
+		mes "[Marchand Spécial]";
+		mes "Voici les items de base.";
+		// Votre boutique de base ici
+		close;
+		
+	case 2:
+		if (.@level >= 3) {
+			mes "[Marchand Spécial]";
+			mes "Voici les items intermédiaires.";
+			// Votre boutique intermédiaire ici
+		}
+		close;
+		
+	case 3:
+		if (.@level >= 7) {
+			mes "[Marchand Spécial]";
+			mes "Voici les items rares.";
+			// Votre boutique rare ici
+		}
+		close;
+		
+	case 4:
+		if (.@level >= 10) {
+			mes "[Marchand Spécial]";
+			mes "Voici les items légendaires !";
+			// Votre boutique légendaire ici
+		}
+		close;
+		
+	default:
+		close;
+	}
+}
+
+//===================================================================
+//= EXEMPLE 4 : Contenu qui nécessite PLUSIEURS conditions
+//===================================================================
+// Ce NPC n'apparaît que si :
+// - Arbor est au niveau 5
+// - L'avant-poste 0 est au niveau 5
+// - L'avant-poste 1 est au niveau 3
+
+sh_fild01,165,165,4	script	Archiviste Ancien	4_M_BIBI,{
+	// Vérifications multiples
+	if ($ArborProsperityLevel < 5) {
+		mes "[???]";
+		mes "...";
+		close;
+	}
+	
+	if (!$ArborOutpostUnlocked[0] || $ArborOutpostLevel[0] < 5) {
+		mes "[Archiviste]";
+		mes "Le Camp du Nord doit être";
+		mes "au niveau 5 pour accéder";
+		mes "à mes archives.";
+		close;
+	}
+	
+	if (!$ArborOutpostUnlocked[1] || $ArborOutpostLevel[1] < 3) {
+		mes "[Archiviste]";
+		mes "Le Relais de l'Est doit être";
+		mes "au niveau 3 pour accéder";
+		mes "à mes archives.";
+		close;
+	}
+	
+	mes "[Archiviste Ancien]";
+	mes "Félicitations !";
+	mes "Vous avez débloqué l'accès";
+	mes "aux archives secrètes.";
+	mes " ";
+	mes "Que voulez-vous consulter ?";
+	// Votre contenu spécial ici
+	close;
+}
+
+//===================================================================
+//= EXEMPLE 5 : Event qui se déclenche automatiquement
+//===================================================================
+// Dans ArborConfig (npc_arbor.txt), ajoutez dans OnOutpostLevelUp :
+
+/*
+OnOutpostLevelUp:
+	callfunc("CheckArborOutpostUnlock");
+	
+	.@outpostId = $@ArborOutpostLevelUp;
+	.@level = $ArborOutpostLevel[.@outpostId];
+	
+	// Quand le Camp du Nord atteint le niveau 5
+	if (.@outpostId == 0 && .@level == 5) {
+		announce "🎉 Le Donjon Mystique du Nord vient d'être découvert !", bc_all, 0xFF6600;
+		enablenpc "#vers_donjon_mystique";
+	}
+	
+	// Quand le Relais de l'Est atteint le niveau 7
+	if (.@outpostId == 1 && .@level == 7) {
+		announce "🎉 La Forêt Enchantée de l'Est est maintenant accessible !", bc_all, 0xFF6600;
+		enablenpc "#warp_foret_enchantee";
+	}
+	
+	// Quand la Forteresse du Sud atteint le niveau 10
+	if (.@outpostId == 2 && .@level == 10) {
+		announce "⚔️ Le Boss Légendaire du Sud est apparu !", bc_all, 0xFF0000;
+		monster "sh_fild04", 200, 200, "Titan du Sud", 1234, 1, ""; // Changez l'ID
+	}
+	
+	// Contenu spécial si TOUS les avant-postes sont au max
+	if ($ArborOutpostLevel[0] == 10 && $ArborOutpostLevel[1] == 10 && $ArborOutpostLevel[2] == 10) {
+		announce "🌟 TOUS LES AVANT-POSTES SONT AU MAXIMUM ! LA ZONE FINALE EST DÉBLOQUÉE !", bc_all, 0xFFD700;
+		enablenpc "#warp_zone_finale";
+	}
+	
+	end;
+*/
+
+//===================================================================
+//= EXEMPLE 6 : Zone secrète avec plusieurs prérequis
+//===================================================================
+// Cette zone n'est accessible que si certaines conditions sont remplies
+
+-	script	#check_zone_secrete	FAKE_NPC,{
+OnInit:
+	// Désactiver le warp au démarrage
+	disablenpc "#warp_zone_secrete";
+	end;
+}
+
+sh_fild01,170,170,0	script	#warp_zone_secrete	WARPNPC,2,2,{
+	// Conditions multiples
+	if ($ArborProsperityLevel < 8) {
+		mes "Une barrière magique vous empêche d'avancer.";
+		mes " ";
+		mes "^777777Arbor Ancresse doit atteindre le niveau 8.^000000";
+		close;
+	}
+	
+	.@total = 0;
+	for (.@i = 0; .@i < 3; .@i++) {
+		if ($ArborOutpostLevel[.@i] >= 7) {
+			.@total++;
+		}
+	}
+	
+	if (.@total < 2) {
+		mes "Une barrière magique vous empêche d'avancer.";
+		mes " ";
+		mes "^777777Au moins 2 avant-postes doivent être au niveau 7.^000000";
+		mes "^777777Actuellement : " + .@total + "/2^000000";
+		close;
+	}
+	
+	mes "[Portail Mystique]";
+	mes "La zone secrète vous attend.";
+	mes "Voulez-vous entrer ?";
+	next;
+	
+	if (select("Oui", "Non") == 1) {
+		warp "votre_zone_secrete", 100, 100; // CHANGEZ ICI
+	}
+	close;
+}
+
+//===================================================================
+//= EXEMPLE 7 : NPC qui donne des quêtes selon la progression
+//===================================================================
+
+sh_fild01,175,175,4	script	Questeur des Avant-Postes	4_M_KHMAN,{
+	mes "[Questeur]";
+	mes "Bonjour aventurier !";
+	mes "J'ai des missions pour vous.";
+	next;
+	
+	.@menu$ = "";
+	
+	// Quête 1 : Disponible si Avant-poste 0 niveau 3
+	if ($ArborOutpostUnlocked[0] && $ArborOutpostLevel[0] >= 3) {
+		.@menu$ += "Quête : Explorer le Camp du Nord:";
+	}
+	
+	// Quête 2 : Disponible si Avant-poste 1 niveau 5
+	if ($ArborOutpostUnlocked[1] && $ArborOutpostLevel[1] >= 5) {
+		.@menu$ += "Quête : Sécuriser le Relais de l'Est:";
+	}
+	
+	// Quête 3 : Disponible si tous les avant-postes sont débloqués
+	if ($ArborOutpostUnlocked[0] && $ArborOutpostUnlocked[1] && $ArborOutpostUnlocked[2]) {
+		.@menu$ += "Quête : Unifier les Avant-Postes:";
+	}
+	
+	.@menu$ += "Quitter";
+	
+	if (.@menu$ == "Quitter") {
+		mes "[Questeur]";
+		mes "Développez les avant-postes";
+		mes "pour débloquer des quêtes !";
+		close;
+	}
+	
+	switch(select(.@menu$)) {
+	case 1:
+		mes "[Questeur]";
+		mes "Explorez le Camp du Nord...";
+		// Votre quête ici
+		close;
+		
+	case 2:
+		mes "[Questeur]";
+		mes "Sécurisez le Relais de l'Est...";
+		// Votre quête ici
+		close;
+		
+	case 3:
+		mes "[Questeur]";
+		mes "Unifiez les avant-postes...";
+		// Votre quête ici
+		close;
+		
+	default:
+		close;
+	}
+}
+
+//===================================================================
+//= RÉSUMÉ DES VARIABLES UTILES
+//===================================================================
+/*
+
+PROSPÉRITÉ D'ARBOR ANCRESSE :
+===============================
+$ArborProsperityLevel (0-10)
+	- Niveau de développement de la ville principale
+	- Débloque les avant-postes selon .OutpostUnlockLevel[id]
+
+$ArborResource[0-9]
+	- Ressources accumulées pour la prospérité
+	- 10 types de ressources différents
+
+AVANT-POSTES :
+===============
+$ArborOutpostUnlocked[0-2]
+	- 1 si l'avant-poste est débloqué, 0 sinon
+	- Débloqué automatiquement par ArborConfig::OnOutpostUnlock
+
+$ArborOutpostLevel[0-2] (0-10)
+	- Niveau de prospérité de chaque avant-poste
+	- Monte avec les livraisons de colis
+
+$ArborOutpostDeliveries[0-2]
+	- Nombre total de livraisons effectuées
+	- Utilisé pour calculer le niveau de l'avant-poste
+
+ÉVÉNEMENTS :
+=============
+ArborConfig::OnLevelUp
+	- Déclenché quand Arbor monte de niveau
+	- $ArborProsperityLevel contient le nouveau niveau
+
+ArborConfig::OnOutpostUnlock
+	- Déclenché quand un avant-poste est débloqué
+	- $@ArborOutpostUnlocked contient l'ID de l'avant-poste
+
+ArborConfig::OnOutpostLevelUp
+	- Déclenché quand un avant-poste monte de niveau
+	- $@ArborOutpostLevelUp contient l'ID de l'avant-poste
+	- $ArborOutpostLevel[id] contient le nouveau niveau
+
+*/

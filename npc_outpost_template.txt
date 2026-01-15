@@ -1,0 +1,590 @@
+//===================================================================
+//= Template NPCs pour les Avant-Postes d'Arbor Ancresse
+//===================================================================
+//= ⚠️ INSTRUCTIONS :
+//= 1. Copiez ce fichier pour chaque avant-poste
+//= 2. Modifiez les coordonnées selon votre configuration
+//= 3. Changez l'ID de l'avant-poste (.@outpostId)
+//= 4. Personnalisez les dialogues si nécessaire
+//= 5. Les NPCs sont initialement DISABLED (invisibles) et activés automatiquement
+//=    par ArborConfig::OnOutpostUnlock quand Arbor atteint le niveau requis
+//= 6. IMPORTANT : Les noms des NPCs doivent correspondre exactement à ceux
+//=    configurés dans ArborConfig::OnOutpostUnlock (npc_arbor.txt)
+//===================================================================
+
+//===================================================================
+//= AVANT-POSTE 0 : Camp du Nord (sh_fild02)
+//===================================================================
+
+// NPC de Réception des Livraisons
+// IMPORTANT : Ce NPC est disabled par défaut et sera activé quand Arbor atteindra le niveau requis
+sh_fild02,100,100,4	script	Commandant du Camp	4_M_JOB_KNIGHT1,{
+	.@outpostId = 0; // ID de cet avant-poste (0, 1, 2...)
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "[???]";
+		mes "Cette zone n'est pas encore accessible.";
+		mes " ";
+		mes "^777777Développez la prospérité d'Arbor Ancresse";
+		mes "pour débloquer cet avant-poste.^000000";
+		close;
+	}
+	
+	mes "[Commandant du Camp]";
+	mes "Bienvenue au ^00AA00Camp du Nord^000000,";
+	mes "avant-poste d'Arbor Ancresse.";
+	next;
+	
+	while(1) {
+		switch(select("📦 Livrer un colis", "📊 Statut de l'avant-poste", "🎁 Récompenses", "Quitter")) {
+		case 1:
+		case 1:
+			// Livraison
+			if (!#arbor_transport_active) {
+				mes "[Commandant du Camp]";
+				mes "Vous n'avez pas de colis en cours de transport.";
+				mes " ";
+				mes "Récupérez un colis au Point de Livraison";
+				mes "à Arbor Ancresse pour commencer.";
+				next;
+				break;
+			}
+			
+			// Effectuer la livraison
+			if (callfunc("CompleteOutpostDelivery", .@outpostId)) {
+				mes "[Commandant du Camp]";
+				mes "^00FF00Livraison réussie !^000000";
+				mes " ";
+				mes "Merci pour votre contribution.";
+				mes "L'avant-poste se développe grâce à vous !";
+				
+				// Récompenses
+				.@reward = 3000 + ($ArborOutpostLevel[.@outpostId] * 500);
+				.@exp = 500 + ($ArborOutpostLevel[.@outpostId] * 100);
+				
+				Zeny += .@reward;
+				getexp .@exp, 0;
+				
+				next;
+				mes "[Commandant du Camp]";
+				mes "^FFAAAARécompenses :^000000";
+				mes " • Zeny : ^00FF00" + .@reward + "z^000000";
+				mes " • Exp : ^0099FF" + .@exp + "^000000";
+				mes " ";
+				mes "Livraisons totales : ^FFAA00" + $ArborOutpostDeliveries[.@outpostId] + "^000000";
+				next;
+			} else {
+				mes "[Commandant du Camp]";
+				mes "^FF0000Erreur lors de la livraison.^000000";
+				next;
+			}
+			break;
+			
+		case 2:
+			// Statut
+			mes "[Commandant du Camp]";
+			mes "^00AA00=== Statut du Camp du Nord ===^000000";
+			mes " ";
+			
+			.@level = $ArborOutpostLevel[.@outpostId];
+			.@deliveries = $ArborOutpostDeliveries[.@outpostId];
+			.@levelName$ = getvariableofnpc(.OutpostLevelNames$[.@level], "ArborConfig");
+			
+			mes "Niveau actuel : ^0099FF" + .@level + "/10^000000";
+			mes "Statut : ^00AA00" + .@levelName$ + "^000000";
+			mes "Livraisons totales : ^FFAA00" + .@deliveries + "^000000";
+			mes " ";
+			
+			if (.@level < 10) {
+				.@nextLevel = .@level + 1;
+				.@required = getvariableofnpc(.OutpostLevelRequirements[.@nextLevel], "ArborConfig");
+				.@nextLevelName$ = getvariableofnpc(.OutpostLevelNames$[.@nextLevel], "ArborConfig");
+				
+				mes "^FFAAAAProchain niveau :^000000";
+				mes .@nextLevelName$ + " (Niv. " + .@nextLevel + ")";
+				mes "Progression : ^00FF00" + .@deliveries + " / " + .@required + "^000000";
+			} else {
+				mes "^00FF00Niveau maximum atteint !^000000";
+			}
+			
+			next;
+			break;
+			
+		case 3:
+			// Récompenses débloquées
+			mes "[Commandant du Camp]";
+			mes "^00AA00=== Contenu Débloqué ===^000000";
+			mes " ";
+			
+			.@level = $ArborOutpostLevel[.@outpostId];
+			
+			mes "Niveau " + .@level + " atteint :";
+			mes " ";
+			
+			// Personnalisez selon vos contenus
+			if (.@level >= 1) mes "^00FF00✓^000000 Accès au campement";
+			else mes "^FF0000✗^000000 Accès au campement (Niv. 1)";
+			
+			if (.@level >= 3) mes "^00FF00✓^000000 Boutique de base";
+			else mes "^FF0000✗^000000 Boutique de base (Niv. 3)";
+			
+			if (.@level >= 5) mes "^00FF00✓^000000 Warp vers Grotte Nord";
+			else mes "^FF0000✗^000000 Warp vers Grotte Nord (Niv. 5)";
+			
+			if (.@level >= 7) mes "^00FF00✓^000000 Boutique avancée";
+			else mes "^FF0000✗^000000 Boutique avancée (Niv. 7)";
+			
+			if (.@level >= 10) mes "^00FF00✓^000000 Donjon Légendaire";
+			else mes "^FF0000✗^000000 Donjon Légendaire (Niv. 10)";
+			
+			next;
+			break;
+			
+		case 4:
+			mes "[Commandant du Camp]";
+			mes "Bonne route, voyageur !";
+			close;
+		}
+	}
+	
+OnInit:
+	// Désactiver ce NPC au démarrage
+	// Il sera activé par ArborConfig::OnOutpostUnlock
+	disablenpc "Commandant du Camp";
+	end;
+}
+
+// Exemple de NPC qui se débloque selon le niveau de l'avant-poste
+sh_fild02,105,100,4	script	Marchand du Camp	4_M_01,{
+	.@outpostId = 0;
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "[Marchand]";
+		mes "...";
+		close;
+	}
+	
+	.@level = $ArborOutpostLevel[.@outpostId];
+	
+	if (.@level < 3) {
+		mes "[Marchand du Camp]";
+		mes "Mon échoppe n'est pas encore";
+		mes "assez développée...";
+		mes " ";
+		mes "Revenez quand l'avant-poste";
+		mes "aura atteint le ^0099FFniveau 3^000000.";
+		mes " ";
+		mes "^777777(Livraisons : " + $ArborOutpostDeliveries[.@outpostId] + " / " + getvariableofnpc(.OutpostLevelRequirements[3], "ArborConfig") + ")^000000";
+		close;
+	}
+	
+	mes "[Marchand du Camp]";
+	mes "Bienvenue dans ma boutique !";
+	mes "Que puis-je faire pour vous ?";
+	next;
+	
+	// Votre boutique ici
+	// callshop "Shop_Camp_Nord", 1;
+	// npcshopattach "Shop_Camp_Nord";
+	
+	close;
+	
+OnInit:
+	// Désactiver ce NPC au démarrage
+	disablenpc "Marchand du Camp";
+	end;
+}
+
+// Exemple de Warp qui se débloque selon le niveau de l'avant-poste
+sh_fild02,110,100,0	script	#warp_grotte_nord	WARPNPC,2,2,{
+	.@outpostId = 0;
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "Cette zone est inaccessible.";
+		close;
+	}
+	
+	.@level = $ArborOutpostLevel[.@outpostId];
+	
+	if (.@level < 5) {
+		mes "Le passage est bloqué.";
+		mes " ";
+		mes "^777777L'avant-poste doit atteindre";
+		mes "le niveau 5 pour débloquer l'accès.^000000";
+		mes " ";
+		mes "^777777(Livraisons : " + $ArborOutpostDeliveries[.@outpostId] + " / " + getvariableofnpc(.OutpostLevelRequirements[5], "ArborConfig") + ")^000000";
+		close;
+	}
+	
+	mes "Voulez-vous entrer dans la Grotte du Nord ?";
+	next;
+	
+	if (select("Oui", "Non") == 1) {
+		warp "votre_map", 100, 100; // CHANGEZ LA DESTINATION
+	}
+	close;
+}
+
+//===================================================================
+//= AVANT-POSTE 1 : Relais de l'Est (sh_fild03)
+//===================================================================
+
+sh_fild03,150,150,4	script	Chef du Relais	4_M_JOB_KNIGHT2,{
+	.@outpostId = 1; // ID de cet avant-poste
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "[???]";
+		mes "Cette zone n'est pas encore accessible.";
+		mes " ";
+		mes "^777777Développez la prospérité d'Arbor Ancresse";
+		mes "pour débloquer cet avant-poste.^000000";
+		close;
+	}
+	
+	mes "[Chef du Relais]";
+	mes "Bienvenue au ^00AA00Relais de l'Est^000000,";
+	mes "avant-poste d'Arbor Ancresse.";
+	next;
+	
+	while(1) {
+		switch(select("📦 Livrer un colis", "📊 Statut de l'avant-poste", "🎁 Récompenses", "Quitter")) {
+		case 1:
+			// Livraison
+			if (!#arbor_transport_active) {
+				mes "[Chef du Relais]";
+				mes "Vous n'avez pas de colis en cours de transport.";
+				mes " ";
+				mes "Récupérez un colis au Point de Livraison";
+				mes "à Arbor Ancresse pour commencer.";
+				next;
+				break;
+			}
+			
+			// Effectuer la livraison
+			if (callfunc("CompleteOutpostDelivery", .@outpostId)) {
+				mes "[Chef du Relais]";
+				mes "^00FF00Livraison réussie !^000000";
+				mes " ";
+				mes "Merci pour votre contribution.";
+				mes "L'avant-poste se développe grâce à vous !";
+				
+				// Récompenses
+				.@reward = 3000 + ($ArborOutpostLevel[.@outpostId] * 500);
+				.@exp = 500 + ($ArborOutpostLevel[.@outpostId] * 100);
+				
+				Zeny += .@reward;
+				getexp .@exp, 0;
+				
+				next;
+				mes "[Chef du Relais]";
+				mes "^FFAAAARécompenses :^000000";
+				mes " • Zeny : ^00FF00" + .@reward + "z^000000";
+				mes " • Exp : ^0099FF" + .@exp + "^000000";
+				mes " ";
+				mes "Livraisons totales : ^FFAA00" + $ArborOutpostDeliveries[.@outpostId] + "^000000";
+				next;
+			} else {
+				mes "[Chef du Relais]";
+				mes "^FF0000Erreur lors de la livraison.^000000";
+				next;
+			}
+			break;
+			
+		case 2:
+			// Statut
+			mes "[Chef du Relais]";
+			mes "^00AA00=== Statut du Relais de l'Est ===^000000";
+			mes " ";
+			
+			.@level = $ArborOutpostLevel[.@outpostId];
+			.@deliveries = $ArborOutpostDeliveries[.@outpostId];
+			.@levelName$ = getvariableofnpc(.OutpostLevelNames$[.@level], "ArborConfig");
+			
+			mes "Niveau actuel : ^0099FF" + .@level + "/10^000000";
+			mes "Statut : ^00AA00" + .@levelName$ + "^000000";
+			mes "Livraisons totales : ^FFAA00" + .@deliveries + "^000000";
+			mes " ";
+			
+			if (.@level < 10) {
+				.@nextLevel = .@level + 1;
+				.@required = getvariableofnpc(.OutpostLevelRequirements[.@nextLevel], "ArborConfig");
+				.@nextLevelName$ = getvariableofnpc(.OutpostLevelNames$[.@nextLevel], "ArborConfig");
+				
+				mes "^FFAAAAProchain niveau :^000000";
+				mes .@nextLevelName$ + " (Niv. " + .@nextLevel + ")";
+				mes "Progression : ^00FF00" + .@deliveries + " / " + .@required + "^000000";
+			} else {
+				mes "^00FF00Niveau maximum atteint !^000000";
+			}
+			
+			next;
+			break;
+			
+		case 3:
+			// Récompenses débloquées
+			mes "[Chef du Relais]";
+			mes "^00AA00=== Contenu Débloqué ===^000000";
+			mes " ";
+			
+			.@level = $ArborOutpostLevel[.@outpostId];
+			
+			mes "Niveau " + .@level + " atteint :";
+			mes " ";
+			
+			// Personnalisez selon vos contenus pour cet avant-poste
+			if (.@level >= 1) mes "^00FF00✓^000000 Accès au relais";
+			else mes "^FF0000✗^000000 Accès au relais (Niv. 1)";
+			
+			if (.@level >= 4) mes "^00FF00✓^000000 Forgeron disponible";
+			else mes "^FF0000✗^000000 Forgeron disponible (Niv. 4)";
+			
+			if (.@level >= 6) mes "^00FF00✓^000000 Warp vers Forêt de l'Est";
+			else mes "^FF0000✗^000000 Warp vers Forêt de l'Est (Niv. 6)";
+			
+			if (.@level >= 8) mes "^00FF00✓^000000 Boutique d'enchantements";
+			else mes "^FF0000✗^000000 Boutique d'enchantements (Niv. 8)";
+			
+			if (.@level >= 10) mes "^00FF00✓^000000 Boss Raid disponible";
+			else mes "^FF0000✗^000000 Boss Raid disponible (Niv. 10)";
+			
+			next;
+			break;
+			
+		case 4:
+			mes "[Chef du Relais]";
+			mes "Bonne route, voyageur !";
+			close;
+		}
+	}
+	
+OnInit:
+	// Désactiver ce NPC au démarrage
+	disablenpc "Chef du Relais";
+	end;
+}
+
+//===================================================================
+//= AVANT-POSTE 2 : Forteresse du Sud (sh_fild04)
+//===================================================================
+
+sh_fild04,200,200,4	script	Capitaine de la Forteresse	4_M_KNIGHT_GOLD,{
+	.@outpostId = 2; // ID de cet avant-poste
+	
+	// Vérifier si l'avant-poste est débloqué
+	if (!$ArborOutpostUnlocked[.@outpostId]) {
+		mes "[???]";
+		mes "Cette zone n'est pas encore accessible.";
+		mes " ";
+		mes "^777777Développez la prospérité d'Arbor Ancresse";
+		mes "pour débloquer cet avant-poste.^000000";
+		close;
+	}
+	
+	mes "[Capitaine de la Forteresse]";
+	mes "Bienvenue à la ^00AA00Forteresse du Sud^000000,";
+	mes "avant-poste d'Arbor Ancresse.";
+	next;
+	
+	while(1) {
+		switch(select("📦 Livrer un colis", "📊 Statut de l'avant-poste", "🎁 Récompenses", "Quitter")) {
+		case 1:
+			// Livraison
+			if (!#arbor_transport_active) {
+				mes "[Capitaine de la Forteresse]";
+				mes "Vous n'avez pas de colis en cours de transport.";
+				mes " ";
+				mes "Récupérez un colis au Point de Livraison";
+				mes "à Arbor Ancresse pour commencer.";
+				next;
+				break;
+			}
+			
+			// Effectuer la livraison
+			if (callfunc("CompleteOutpostDelivery", .@outpostId)) {
+				mes "[Capitaine de la Forteresse]";
+				mes "^00FF00Livraison réussie !^000000";
+				mes " ";
+				mes "Merci pour votre contribution.";
+				mes "L'avant-poste se développe grâce à vous !";
+				
+				// Récompenses
+				.@reward = 3000 + ($ArborOutpostLevel[.@outpostId] * 500);
+				.@exp = 500 + ($ArborOutpostLevel[.@outpostId] * 100);
+				
+				Zeny += .@reward;
+				getexp .@exp, 0;
+				
+				next;
+				mes "[Capitaine de la Forteresse]";
+				mes "^FFAAAARécompenses :^000000";
+				mes " • Zeny : ^00FF00" + .@reward + "z^000000";
+				mes " • Exp : ^0099FF" + .@exp + "^000000";
+				mes " ";
+				mes "Livraisons totales : ^FFAA00" + $ArborOutpostDeliveries[.@outpostId] + "^000000";
+				next;
+			} else {
+				mes "[Capitaine de la Forteresse]";
+				mes "^FF0000Erreur lors de la livraison.^000000";
+				next;
+			}
+			break;
+			
+		case 2:
+			// Statut
+			mes "[Capitaine de la Forteresse]";
+			mes "^00AA00=== Statut de la Forteresse du Sud ===^000000";
+			mes " ";
+			
+			.@level = $ArborOutpostLevel[.@outpostId];
+			.@deliveries = $ArborOutpostDeliveries[.@outpostId];
+			.@levelName$ = getvariableofnpc(.OutpostLevelNames$[.@level], "ArborConfig");
+			
+			mes "Niveau actuel : ^0099FF" + .@level + "/10^000000";
+			mes "Statut : ^00AA00" + .@levelName$ + "^000000";
+			mes "Livraisons totales : ^FFAA00" + .@deliveries + "^000000";
+			mes " ";
+			
+			if (.@level < 10) {
+				.@nextLevel = .@level + 1;
+				.@required = getvariableofnpc(.OutpostLevelRequirements[.@nextLevel], "ArborConfig");
+				.@nextLevelName$ = getvariableofnpc(.OutpostLevelNames$[.@nextLevel], "ArborConfig");
+				
+				mes "^FFAAAAProchain niveau :^000000";
+				mes .@nextLevelName$ + " (Niv. " + .@nextLevel + ")";
+				mes "Progression : ^00FF00" + .@deliveries + " / " + .@required + "^000000";
+			} else {
+				mes "^00FF00Niveau maximum atteint !^000000";
+			}
+			
+			next;
+			break;
+			
+		case 3:
+			// Récompenses débloquées
+			mes "[Capitaine de la Forteresse]";
+			mes "^00AA00=== Contenu Débloqué ===^000000";
+			mes " ";
+			
+			.@level = $ArborOutpostLevel[.@outpostId];
+			
+			mes "Niveau " + .@level + " atteint :";
+			mes " ";
+			
+			// Personnalisez selon vos contenus pour cet avant-poste
+			if (.@level >= 1) mes "^00FF00✓^000000 Accès à la forteresse";
+			else mes "^FF0000✗^000000 Accès à la forteresse (Niv. 1)";
+			
+			if (.@level >= 3) mes "^00FF00✓^000000 Instructeur de combat";
+			else mes "^FF0000✗^000000 Instructeur de combat (Niv. 3)";
+			
+			if (.@level >= 5) mes "^00FF00✓^000000 Warp vers Montagnes du Sud";
+			else mes "^FF0000✗^000000 Warp vers Montagnes du Sud (Niv. 5)";
+			
+			if (.@level >= 7) mes "^00FF00✓^000000 Armurier légendaire";
+			else mes "^FF0000✗^000000 Armurier légendaire (Niv. 7)";
+			
+			if (.@level >= 10) mes "^00FF00✓^000000 Donjon de la Forteresse";
+			else mes "^FF0000✗^000000 Donjon de la Forteresse (Niv. 10)";
+			
+			next;
+			break;
+			
+		case 4:
+			mes "[Capitaine de la Forteresse]";
+			mes "Bonne route, voyageur !";
+			close;
+		}
+	}
+	
+OnInit:
+	// Désactiver ce NPC au démarrage
+	disablenpc "Capitaine de la Forteresse";
+	end;
+}
+
+//===================================================================
+//= NOTES D'UTILISATION
+//===================================================================
+// Variables globales disponibles pour vos scripts :
+// 
+// PROSPÉRITÉ D'ARBOR ANCRESSE :
+// $ArborProsperityLevel            - Niveau de prospérité d'Arbor (0-10)
+//
+// AVANT-POSTES :
+// $ArborOutpostUnlocked[id]        - 1 si débloqué, 0 sinon
+// $ArborOutpostLevel[id]           - Niveau actuel de l'avant-poste (0-10)
+// $ArborOutpostDeliveries[id]      - Nombre total de livraisons
+//
+// SYSTÈME DE DÉBLOQUAGE :
+// Les avant-postes se débloquent automatiquement quand Arbor Ancresse
+// atteint le niveau configuré dans .OutpostUnlockLevel[id] (ArborConfig)
+//
+// Les NPCs des avant-postes sont INVISIBLES (disablenpc) au démarrage
+// et deviennent visibles (enablenpc) automatiquement dans ArborConfig::OnOutpostUnlock
+//
+// ⚠️ IMPORTANT : Pour que vos NPCs s'activent automatiquement :
+// 1. Ajoutez disablenpc "Nom_Du_NPC"; dans OnInit de chaque NPC
+// 2. Ajoutez enablenpc "Nom_Du_NPC"; dans ArborConfig::OnOutpostUnlock (npc_arbor.txt)
+//    selon l'ID de l'avant-poste
+//
+// UTILISATION DANS VOS NPCs :
+// 
+// 1. Créer un NPC d'avant-poste invisible au départ :
+//    sh_fild02,100,100,4  script  Mon NPC  4_M_01,{
+//        .@outpostId = 0;
+//        
+//        if (!$ArborOutpostUnlocked[.@outpostId]) {
+//            mes "Zone inaccessible.";
+//            close;
+//        }
+//        
+//        mes "Bienvenue !";
+//        close;
+//        
+//    OnInit:
+//        disablenpc "Mon NPC";  // NPC invisible au départ
+//        end;
+//    }
+//
+// 2. Dans npc_arbor.txt, ArborConfig::OnOutpostUnlock :
+//    if (.@outpostId == 0) {
+//        enablenpc "Mon NPC";  // Rendre le NPC visible
+//    }
+//
+// 3. Débloquer du contenu selon le niveau de l'avant-poste :
+//    Dans ArborConfig::OnOutpostLevelUp :
+//    if (.@outpostId == 0 && .@level >= 5) {
+//        enablenpc "Warp_Donjon_Nord";
+//        announce "Le Donjon du Nord est accessible !", bc_all, 0xFFAA00;
+//    }
+//
+// 3. Débloquer du contenu selon PLUSIEURS avant-postes :
+//    if ($ArborOutpostLevel[0] >= 3 && $ArborOutpostLevel[1] >= 3) {
+//        enablenpc "NPC_Special_Deux_Avant_Postes";
+//    }
+//
+// 4. Dans ArborConfig::OnOutpostLevelUp, débloquer automatiquement :
+//    .@outpostId = $@ArborOutpostLevelUp;
+//    .@level = $ArborOutpostLevel[.@outpostId];
+//    
+//    if (.@outpostId == 0 && .@level >= 5) {
+//        enablenpc "Warp_Grotte_Nord";
+//        announce "La Grotte du Nord est maintenant accessible !", bc_all, 0xFFAA00;
+//    }
+//
+// EXEMPLE COMPLET DE DÉBLOQUAGE PROGRESSIF :
+//
+// Niveau Arbor 2 → Débloque Avant-poste 0 et 1
+// Avant-poste 0 Niv 3 → Boutique disponible
+// Avant-poste 0 Niv 5 → Warp vers donjon
+// Avant-poste 0 Niv 10 → Boss raid
+//
+// Niveau Arbor 5 → Débloque Avant-poste 2
+// Avant-poste 2 Niv 7 → Zone secrète
+//
+// Si Avant-poste 0 Niv 10 ET Avant-poste 2 Niv 10 → Contenu final
+//===================================================================

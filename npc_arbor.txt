@@ -1,0 +1,1401 @@
+//===================================================================
+//= NPCs d'Arbor Ancresse - Ville Spéciale
+//===================================================================
+//= Ville sans production, uniquement système de prospérité
+//= Les joueurs déposent des ressources pour débloquer du contenu
+//===================================================================
+
+//===================================================================
+//= Hub Principal d'Arbor Ancresse
+//===================================================================
+sh_fild01,150,150,4	script	Hub d'Arbor Ancresse	4_M_ORIENT02,{
+	.@city = 5; // ID de la ville (5 = Arbor Ancresse)
+	
+	mes "[Gardien d'Arbor]";
+	mes "Bienvenue à ^00AA00Arbor Ancresse^000000,";
+	mes "la cité mystique des anciens arbres.";
+	next;
+	
+	mes "[Gardien d'Arbor]";
+	mes "^FFAAAANotre ville a besoin de votre aide !^000000";
+	mes " ";
+	mes "En apportant des ressources,";
+	mes "vous contribuez à la prospérité";
+	mes "et débloquez de nouveaux contenus.";
+	next;
+	
+	while(1) {
+		switch(select("📊 Statut de la ville", "📈 Niveaux de prospérité", "❓ Comment ça marche ?", "Quitter")) {
+		case 1:
+			// Afficher le statut actuel
+			mes "[Gardien d'Arbor]";
+			mes "^00AA00=== Statut d'Arbor Ancresse ===^000000";
+			mes " ";
+			
+			// Récupérer le niveau actuel
+			.@currentLevel = $ArborProsperityLevel;
+			mes "^FF6600Niveau de Prospérité :^000000 " + .@currentLevel + "/10";
+			mes "^0099FFStatut :^000000 " + getvariableofnpc(.LevelNames$[.@currentLevel], "ArborConfig");
+			mes " ";
+			
+			// Afficher les ressources actuelles
+			mes "^00AA00Ressources accumulées :^000000";
+			for (.@i = 0; .@i < 10; .@i++) {
+				.@amount = $ArborResource[.@i];
+				.@itemId = getvariableofnpc(.ResourceItems[.@i], "ArborConfig");
+				.@itemName$ = getitemname(.@itemId);
+				mes " • " + .@itemName$ + " : ^0099FF" + .@amount + "^000000";
+			}
+			mes " ";
+			mes "^FFAA00Colis en stock :^000000 ^00FF00" + $ArborPackages + "^000000 / " + getvariableofnpc(.MaxPackages, "ArborConfig");
+			next;
+			break;
+			
+		case 2:
+			// Afficher les paliers
+			mes "[Gardien d'Arbor]";
+			mes "^00AA00=== Paliers de Prospérité ===^000000";
+			mes " ";
+			
+			for (.@i = 0; .@i < 10; .@i++) {
+				.@status$ = (.@i <= $ArborProsperityLevel) ? "^00FF00✓^000000" : "^FF0000✗^000000";
+				.@levelName$ = getvariableofnpc(.LevelNames$[.@i], "ArborConfig");
+				mes .@status$ + " Niveau " + .@i + " : " + .@levelName$;
+				
+				if (.@i == $ArborProsperityLevel + 1) {
+					mes "   ^777777(Prochain objectif)^000000";
+				}
+			}
+			next;
+			
+			// Afficher les prérequis du prochain niveau
+			if ($ArborProsperityLevel < 9) {
+				.@nextLevel = $ArborProsperityLevel + 1;
+				mes "[Gardien d'Arbor]";
+				mes "^FFAAAAPour atteindre le niveau " + .@nextLevel + " :^000000";
+				mes " ";
+				
+				for (.@i = 0; .@i < 10; .@i++) {
+					.@required = getvariableofnpc(.LevelRequirements[.@nextLevel * 10 + .@i], "ArborConfig");
+					if (.@required > 0) {
+						.@current = $ArborResource[.@i];
+						.@itemId = getvariableofnpc(.ResourceItems[.@i], "ArborConfig");
+						.@itemName$ = getitemname(.@itemId);
+						.@color$ = (.@current >= .@required) ? "^00FF00" : "^FF6600";
+						mes " • " + .@itemName$ + " : " + .@color$ + .@current + "/" + .@required + "^000000";
+					}
+				}
+				next;
+			} else {
+				mes "[Gardien d'Arbor]";
+				mes "^00FF00Félicitations !^000000";
+				mes "Arbor Ancresse a atteint";
+				mes "son niveau maximum !";
+				next;
+			}
+			break;
+			
+		case 3:
+			// Explication
+			mes "[Gardien d'Arbor]";
+			mes "^00AA00Comment contribuer ?^000000";
+			mes " ";
+			mes "1. Collectez les ressources nécessaires";
+			mes "2. Parlez au ^0099FFDépôt de Ressources^000000";
+			mes "3. Déposez vos ressources";
+			mes "4. La prospérité augmente automatiquement !";
+			next;
+			
+			mes "[Gardien d'Arbor]";
+			mes "^FFAAAARécompenses :^000000";
+			mes " ";
+			mes "Chaque niveau débloque :";
+			mes " • De nouveaux NPCs";
+			mes " • Des warps vers de nouvelles zones";
+			mes " • Des boutiques exclusives";
+			mes " • Et bien plus encore !";
+			next;
+			break;
+			
+		case 4:
+			mes "[Gardien d'Arbor]";
+			mes "Que les arbres anciens";
+			mes "vous protègent, voyageur.";
+			close;
+		}
+	}
+}
+
+//===================================================================
+//= Dépôt de Ressources d'Arbor Ancresse
+//===================================================================
+sh_fild01,145,150,4	script	Dépôt de Ressources	4_M_03,{
+	.@city = 5; // ID de la ville
+	
+	mes "[Intendant des Ressources]";
+	mes "Je gère les ressources";
+	mes "d'Arbor Ancresse.";
+	mes " ";
+	mes "Vous pouvez contribuer de deux façons :";
+	mes "^00AA00• Prospérité :^000000 développer la ville";
+	mes "^FFAA00• Production :^000000 créer des colis";
+	next;
+	
+	switch(select("📈 Contribuer à la prospérité", "📦 Créer des colis", "❌ Annuler")) {
+	case 1:
+		// Système de prospérité (ancien code)
+		callsub S_DepositForProsperity;
+		break;
+		
+	case 2:
+		// Nouveau système de production de colis
+		callsub S_DepositForProduction;
+		break;
+		
+	case 3:
+		mes "[Intendant des Ressources]";
+		mes "Très bien. Revenez quand";
+		mes "vous serez prêt à contribuer.";
+		close;
+	}
+	
+	end;
+	
+S_DepositForProsperity:
+	
+	// Menu de dépôt
+	mes "[Intendant des Ressources]";
+	mes "Quelle ressource souhaitez-vous déposer ?";
+	mes " ";
+	mes "^777777(Vous pouvez déposer autant que vous voulez)^000000";
+	next;
+	
+	// Créer le menu dynamique
+	.@menu$ = "";
+	for (.@i = 0; .@i < 10; .@i++) {
+		.@itemId = getvariableofnpc(.ResourceItems[.@i], "ArborConfig");
+		.@itemName$ = getitemname(.@itemId);
+		.@count = countitem(.@itemId);
+		.@menu$ += .@itemName$ + " (" + .@count + " en inventaire):";
+	}
+	.@menu$ += "Annuler";
+	
+	.@choice = select(.@menu$) - 1;
+	
+	if (.@choice == 10) {
+		mes "[Intendant des Ressources]";
+		mes "Très bien.";
+		close;
+	}
+	
+	// Récupérer l'item sélectionné
+	.@itemId = getvariableofnpc(.ResourceItems[.@choice], "ArborConfig");
+	.@itemName$ = getitemname(.@itemId);
+	.@count = countitem(.@itemId);
+	
+	if (.@count == 0) {
+		mes "[Intendant des Ressources]";
+		mes "Vous n'avez pas de ^FF6600" + .@itemName$ + "^000000";
+		mes "dans votre inventaire.";
+		close;
+	}
+	
+	mes "[Intendant des Ressources]";
+	mes "Combien de ^0099FF" + .@itemName$ + "^000000";
+	mes "souhaitez-vous déposer ?";
+	mes " ";
+	mes "^777777(Vous en avez : " + .@count + ")^000000";
+	next;
+	
+	input .@amount;
+	
+	if (.@amount <= 0) {
+		mes "[Intendant des Ressources]";
+		mes "Montant invalide.";
+		close;
+	}
+	
+	if (.@amount > .@count) {
+		mes "[Intendant des Ressources]";
+		mes "Vous n'avez pas assez de ressources.";
+		close;
+	}
+	
+	// Retirer les items et ajouter à la prospérité
+	delitem .@itemId, .@amount;
+	$ArborResource[.@choice] += .@amount;
+	
+	mes "[Intendant des Ressources]";
+	mes "^00FF00Merci pour votre contribution !^000000";
+	mes " ";
+	mes "Vous avez déposé ^0099FF" + .@amount + " " + .@itemName$ + "^000000.";
+	
+	// Vérifier si on peut monter de niveau
+	callfunc("CheckArborProsperity");
+	
+	next;
+	mes "[Intendant des Ressources]";
+	mes "La prospérité d'Arbor Ancresse";
+	mes "est maintenant à :";
+	mes "^00AA00Niveau " + $ArborProsperityLevel + "/10^000000";
+	close;
+	
+S_DepositForProduction:
+	mes "[Intendant des Ressources]";
+	mes "^FFAA00=== Production de Colis ===^000000";
+	mes " ";
+	mes "Les colis sont créés à partir";
+	mes "des ressources déposées.";
+	mes " ";
+	.@rate = getvariableofnpc(.ProductionRate, "ArborConfig");
+	mes "^777777Taux : " + .@rate + " ressources = 1 colis^000000";
+	next;
+	
+	// Vérifier si on a atteint la limite
+	.@maxPackages = getvariableofnpc(.MaxPackages, "ArborConfig");
+	if ($ArborPackages >= .@maxPackages) {
+		mes "[Intendant des Ressources]";
+		mes "^FF0000Attention !^000000";
+		mes "Nous avons atteint notre capacité";
+		mes "de stockage de colis.";
+		mes " ";
+		mes "Veuillez livrer des colis aux";
+		mes "avant-postes avant d'en créer d'autres.";
+		close;
+	}
+	
+	mes "[Intendant des Ressources]";
+	mes "Quelle ressource souhaitez-vous déposer ?";
+	next;
+	
+	// Créer le menu dynamique
+	.@menu$ = "";
+	for (.@i = 0; .@i < 10; .@i++) {
+		.@itemId = getvariableofnpc(.ResourceItems[.@i], "ArborConfig");
+		.@itemName$ = getitemname(.@itemId);
+		.@count = countitem(.@itemId);
+		.@menu$ += .@itemName$ + " (" + .@count + " en inventaire):";
+	}
+	.@menu$ += "Annuler";
+	
+	.@choice = select(.@menu$) - 1;
+	
+	if (.@choice == 10) {
+		mes "[Intendant des Ressources]";
+		mes "Très bien.";
+		close;
+	}
+	
+	// Récupérer l'item sélectionné
+	.@itemId = getvariableofnpc(.ResourceItems[.@choice], "ArborConfig");
+	.@itemName$ = getitemname(.@itemId);
+	.@count = countitem(.@itemId);
+	
+	if (.@count == 0) {
+		mes "[Intendant des Ressources]";
+		mes "Vous n'avez pas de ^FF6600" + .@itemName$ + "^000000";
+		mes "dans votre inventaire.";
+		close;
+	}
+	
+	mes "[Intendant des Ressources]";
+	mes "Combien de ^0099FF" + .@itemName$ + "^000000";
+	mes "souhaitez-vous déposer ?";
+	mes " ";
+	mes "^777777(Vous en avez : " + .@count + ")^000000";
+	next;
+	
+	input .@amount;
+	
+	if (.@amount <= 0) {
+		mes "[Intendant des Ressources]";
+		mes "Montant invalide.";
+		close;
+	}
+	
+	if (.@amount > .@count) {
+		mes "[Intendant des Ressources]";
+		mes "Vous n'avez pas assez de ressources.";
+		close;
+	}
+	
+	// Retirer les items et ajouter aux réserves de production
+	delitem .@itemId, .@amount;
+	$ArborProductionReserve += .@amount;
+	
+	mes "[Intendant des Ressources]";
+	mes "^00FF00Merci pour votre contribution !^000000";
+	mes " ";
+	mes "Vous avez déposé ^0099FF" + .@amount + " " + .@itemName$ + "^000000.";
+	mes "Réserves de production : ^FFAA00" + $ArborProductionReserve + "^000000";
+	
+	// Vérifier si on peut créer des colis
+	.@rate = getvariableofnpc(.ProductionRate, "ArborConfig");
+	.@newPackages = 0;
+	
+	while ($ArborProductionReserve >= .@rate && $ArborPackages < .@maxPackages) {
+		$ArborProductionReserve -= .@rate;
+		$ArborPackages++;
+		.@newPackages++;
+	}
+	
+	if (.@newPackages > 0) {
+		next;
+		mes "[Intendant des Ressources]";
+		mes "^00FF00✨ " + .@newPackages + " colis créé(s) !^000000";
+		mes " ";
+		mes "Colis en stock : ^00AA00" + $ArborPackages + "^000000 / " + .@maxPackages;
+	}
+	
+	close;
+}
+
+//===================================================================
+//= Boutique de Ressources d'Arbor Ancresse
+//===================================================================
+sh_fild01,155,150,4	script	Marchand d'Arbor	4_M_RACHMAN1,{
+	mes "[Marchand d'Arbor]";
+	mes "Bienvenue !";
+	mes "Je vends les ressources";
+	mes "nécessaires à la prospérité";
+	mes "d'Arbor Ancresse.";
+	next;
+	
+	if (select("🛒 Acheter des ressources", "Quitter") == 2) {
+		mes "[Marchand d'Arbor]";
+		mes "À bientôt !";
+		close;
+	}
+	
+	// Menu d'achat
+	.@menu$ = "";
+	for (.@i = 0; .@i < 10; .@i++) {
+		.@itemId = getvariableofnpc(.ResourceItems[.@i], "ArborConfig");
+		.@itemName$ = getitemname(.@itemId);
+		.@price = getvariableofnpc(.ResourcePrice, "ArborConfig");
+		.@menu$ += .@itemName$ + " (" + .@price + "z):";
+	}
+	.@menu$ += "Annuler";
+	
+	.@choice = select(.@menu$) - 1;
+	
+	if (.@choice == 10) {
+		mes "[Marchand d'Arbor]";
+		mes "À bientôt !";
+		close;
+	}
+	
+	.@itemId = getvariableofnpc(.ResourceItems[.@choice], "ArborConfig");
+	.@itemName$ = getitemname(.@itemId);
+	.@price = getvariableofnpc(.ResourcePrice, "ArborConfig");
+	
+	mes "[Marchand d'Arbor]";
+	mes "Combien de ^0099FF" + .@itemName$ + "^000000";
+	mes "voulez-vous acheter ?";
+	mes " ";
+	mes "^777777Prix : " + .@price + "z par unité^000000";
+	next;
+	
+	input .@amount;
+	
+	if (.@amount <= 0) {
+		mes "[Marchand d'Arbor]";
+		mes "Montant invalide.";
+		close;
+	}
+	
+	.@totalCost = .@amount * .@price;
+	
+	if (Zeny < .@totalCost) {
+		mes "[Marchand d'Arbor]";
+		mes "Vous n'avez pas assez de Zeny.";
+		mes "Coût total : ^FF6600" + .@totalCost + "z^000000";
+		close;
+	}
+	
+	Zeny -= .@totalCost;
+	getitem .@itemId, .@amount;
+	
+	mes "[Marchand d'Arbor]";
+	mes "^00FF00Transaction réussie !^000000";
+	mes " ";
+	mes "Vous avez acheté ^0099FF" + .@amount + " " + .@itemName$ + "^000000";
+	mes "pour ^FFAAAA" + .@totalCost + "z^000000.";
+	close;
+}
+
+//===================================================================
+//= Point de Livraison d'Arbor Ancresse
+//===================================================================
+sh_fild01,150,145,4	script	Point de Livraison	4_M_MANAGER,{
+	mes "[Coordinateur de Livraison]";
+	mes "Bienvenue au point de livraison";
+	mes "d'Arbor Ancresse.";
+	mes " ";
+	mes "Les colis doivent être livrés";
+	mes "aux avant-postes dans les alentours.";
+	next;
+	
+	while(1) {
+		switch(select("📦 Récupérer un colis", "🗺️ Liste des avant-postes", "📊 Statut des avant-postes", "Quitter")) {
+		case 1:
+			// Récupérer un colis
+			if ($ArborPackages <= 0) {
+				mes "[Coordinateur de Livraison]";
+				mes "^FF6600Désolé...^000000";
+				mes "Il n'y a aucun colis disponible";
+				mes "pour le moment.";
+				mes " ";
+				mes "Demandez aux joueurs de déposer";
+				mes "des ressources pour la production !";
+				next;
+				break;
+			}
+			
+			// Vérifier si le joueur a déjà un colis
+			if (#arbor_transport_active) {
+				mes "[Coordinateur de Livraison]";
+				mes "^FF0000Vous avez déjà un colis en cours !^000000";
+				mes " ";
+				mes "Veuillez livrer votre colis actuel";
+				mes "à un avant-poste avant d'en";
+				mes "prendre un autre.";
+				next;
+				break;
+			}
+			
+			// Donner le colis au joueur
+			$ArborPackages--;
+			.@packageItem = getvariableofnpc(.PackageItemID, "ArborConfig");
+			getitem .@packageItem, 1;
+			
+			// Enregistrer le transport
+			#arbor_transport_active = 1;
+			
+			mes "[Coordinateur de Livraison]";
+			mes "^00FF00Colis récupéré !^000000";
+			mes " ";
+			mes "Vous pouvez livrer ce colis";
+			mes "à ^0099FFn'importe quel avant-poste^000000";
+			mes "de votre choix.";
+			mes " ";
+			mes "Parlez au commandant de l'avant-poste";
+			mes "pour effectuer la livraison.";
+			
+			dispbottom "[Arbor] Livrez le colis à un avant-poste de votre choix !";
+			next;
+			break;
+			
+		case 2:
+			// Liste des avant-postes
+			mes "[Coordinateur de Livraison]";
+			mes "^00AA00=== Avant-Postes Disponibles ===^000000";
+			mes " ";
+			
+			.@totalOutposts = getvariableofnpc(.TotalOutposts, "ArborConfig");
+			.@hasUnlocked = 0;
+			
+			for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+				if ($ArborOutpostUnlocked[.@i]) {
+					.@hasUnlocked = 1;
+					.@name$ = getvariableofnpc(.OutpostNames$[.@i], "ArborConfig");
+					.@map$ = getvariableofnpc(.OutpostMaps$[.@i], "ArborConfig");
+					.@level = $ArborOutpostLevel[.@i];
+					mes "^00FF00✓^000000 ^0099FF" + .@name$ + "^000000";
+					mes "    Map : " + .@map$;
+					mes "    Niveau : " + .@level + "/10";
+					mes " ";
+				} else {
+					.@unlockLevel = getvariableofnpc(.OutpostUnlockLevel[.@i], "ArborConfig");
+					mes "^FF0000✗^000000 ^777777Avant-poste verrouillé^000000";
+					mes "    ^777777(Arbor niveau " + .@unlockLevel + " requis)^000000";
+					mes " ";
+				}
+			}
+			
+			if (!.@hasUnlocked) {
+				mes "^FF6600Aucun avant-poste débloqué !^000000";
+				mes "Développez Arbor Ancresse pour";
+				mes "débloquer des avant-postes.";
+			}
+			
+			next;
+			break;
+			
+		case 3:
+			// Statut des avant-postes
+			mes "[Coordinateur de Livraison]";
+			
+			// Vérifier s'il y a des avant-postes débloqués
+			.@totalOutposts = getvariableofnpc(.TotalOutposts, "ArborConfig");
+			.@hasUnlocked = 0;
+			for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+				if ($ArborOutpostUnlocked[.@i]) {
+					.@hasUnlocked = 1;
+					break;
+				}
+			}
+			
+			if (!.@hasUnlocked) {
+				mes "^FF6600Aucun avant-poste disponible !^000000";
+				mes " ";
+				mes "Développez la prospérité d'Arbor Ancresse";
+				mes "pour débloquer des avant-postes.";
+				next;
+				break;
+			}
+			
+			mes "Quel avant-poste voulez-vous consulter ?";
+			next;
+			
+			// Créer le menu avec seulement les avant-postes débloqués
+			.@menu$ = "";
+			cleararray .@outpostMap[0], 0, 10;
+			.@menuIndex = 0;
+			
+			for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+				if ($ArborOutpostUnlocked[.@i]) {
+					.@name$ = getvariableofnpc(.OutpostNames$[.@i], "ArborConfig");
+					.@menu$ += .@name$ + ":";
+					.@outpostMap[.@menuIndex] = .@i;
+					.@menuIndex++;
+				}
+			}
+			.@menu$ += "Annuler";
+			
+			.@choice = select(.@menu$) - 1;
+			
+			if (.@choice >= .@menuIndex) {
+				next;
+				break;
+			}
+			
+			// Récupérer le vrai ID de l'avant-poste
+			.@outpostId = .@outpostMap[.@choice];
+			
+			.@name$ = getvariableofnpc(.OutpostNames$[.@outpostId], "ArborConfig");
+			.@level = $ArborOutpostLevel[.@outpostId];
+			.@deliveries = $ArborOutpostDeliveries[.@outpostId];
+			
+			mes "[Coordinateur de Livraison]";
+			mes "^00AA00=== " + .@name$ + " ===^000000";
+			mes " ";
+			mes "Niveau actuel : ^0099FF" + .@level + "/10^000000";
+			mes "Livraisons totales : ^00FF00" + .@deliveries + "^000000";
+			mes " ";
+			
+			if (.@level < 10) {
+				.@nextLevel = .@level + 1;
+				.@required = getvariableofnpc(.OutpostLevelRequirements[.@nextLevel], "ArborConfig");
+				mes "Pour le niveau " + .@nextLevel + " :";
+				mes "^FFAA00" + .@deliveries + " / " + .@required + " livraisons^000000";
+				mes " ";
+				mes "^777777Niveau " + .@nextLevel + " débloquera du contenu...^000000";
+			} else {
+				mes "^00FF00Niveau maximum atteint !^000000";
+			}
+			
+			next;
+			break;
+			
+		case 4:
+			mes "[Coordinateur de Livraison]";
+			mes "Bonne route !";
+			close;
+		}
+	}
+}
+
+//===================================================================
+//= Configuration d'Arbor Ancresse
+//===================================================================
+-	script	ArborConfig	FAKE_NPC,{
+OnInit:
+	// ============================================
+	// 📋 CONFIGURATION DES RESSOURCES
+	// ============================================
+	
+	// IDs des items de ressources (10 types)
+	setarray .ResourceItems[0],
+		7201,  // 0: Log (Bois)
+		517,   // 1: Meat (Nourriture)
+		1011,  // 2: Emveretarcon (Cuivre)
+		7220,  // 3: Cloth (Tissu) - À ÉDITER
+		7053,  // 4: Spice (Épice) - À ÉDITER
+		7321,  // 5: Crystal Fragment - À ÉDITER
+		1010,  // 6: Phracon (Fer) - À ÉDITER
+		7020,  // 7: Silk - À ÉDITER
+		7223,  // 8: Fur - À ÉDITER
+		7038;  // 9: Hard Skin - À ÉDITER
+	
+	// Prix d'achat dans la boutique
+	.ResourcePrice = 1500;
+	
+	// ============================================
+	// � CONFIGURATION DE LA PRODUCTION DE COLIS
+	// ============================================
+	
+	// Taux de production (ressources -> colis)
+	.ProductionRate = 10; // 10 ressources = 1 colis
+	
+	// Limite de stockage de colis
+	.MaxPackages = 30; // Maximum 30 colis en stock
+	
+	// ID de l'item colis
+	.PackageItemID = 7420; // Giftbox
+	
+	// ============================================
+	// 🗺️ CONFIGURATION DES AVANT-POSTES
+	// ============================================
+	// Les avant-postes sont les destinations pour les livraisons
+	// Chaque avant-poste a son propre système de prospérité
+	
+	.TotalOutposts = 3; // Nombre d'avant-postes (À MODIFIER selon vos besoins)
+	
+	// Noms des avant-postes
+	setarray .OutpostNames$[0],
+		"Camp du Nord",      // Avant-poste 0
+		"Relais de l'Est",   // Avant-poste 1
+		"Forteresse du Sud"; // Avant-poste 2
+	
+	// Maps des avant-postes (À MODIFIER avec vos vraies maps)
+	setarray .OutpostMaps$[0],
+		"sh_fild02",  // Avant-poste 0
+		"sh_fild03",  // Avant-poste 1
+		"sh_fild04";  // Avant-poste 2
+	
+	// Coordonnées des NPCs de réception (x, y alternés)
+	setarray .OutpostCoords[0],
+		100, 100,  // Avant-poste 0 (x, y)
+		150, 150,  // Avant-poste 1 (x, y)
+		200, 200;  // Avant-poste 2 (x, y)
+	
+	// Livraisons requises pour chaque niveau (0-10)
+	// Chaque avant-poste monte de niveau selon le nombre de livraisons
+	setarray .OutpostLevelRequirements[0],
+		0,    // Niveau 0 (début)
+		5,    // Niveau 1 : 5 livraisons
+		15,   // Niveau 2 : 15 livraisons
+		30,   // Niveau 3 : 30 livraisons
+		50,   // Niveau 4 : 50 livraisons
+		75,   // Niveau 5 : 75 livraisons
+		105,  // Niveau 6 : 105 livraisons
+		140,  // Niveau 7 : 140 livraisons
+		180,  // Niveau 8 : 180 livraisons
+		225,  // Niveau 9 : 225 livraisons
+		300;  // Niveau 10 : 300 livraisons
+	
+	// Noms des niveaux pour les avant-postes
+	setarray .OutpostLevelNames$[0],
+		"Campement Abandonné",
+		"Avant-poste Rudimentaire",
+		"Poste de Garde",
+		"Fortin Établi",
+		"Bastion Renforcé",
+		"Garnison Fortifiée",
+		"Citadelle Imprenable",
+		"Forteresse Majestueuse",
+		"Bastion Légendaire",
+		"Place Forte Mythique",
+		"Sanctuaire Éternel";
+	
+	// ============================================	// 🔓 DÉBLOQUAGE DES AVANT-POSTES
+	// ============================================
+	// Définit quel niveau de prospérité d'Arbor débloque chaque avant-poste
+	// .OutpostUnlockLevel[avant-poste_id] = niveau_arbor_requis
+	
+	setarray .OutpostUnlockLevel[0],
+		2,  // Avant-poste 0 : débloqué au niveau 2 d'Arbor
+		2,  // Avant-poste 1 : débloqué au niveau 2 d'Arbor
+		5;  // Avant-poste 2 : débloqué au niveau 5 d'Arbor
+	
+	// ⚠️ Si vous ajoutez des avant-postes, ajoutez leur niveau de débloquage ici
+	// Exemple pour 5 avant-postes :
+	// setarray .OutpostUnlockLevel[0], 2, 2, 4, 6, 8;
+	
+	// ============================================	// �📈 NIVEAUX DE PROSPÉRITÉ (10 niveaux)
+	// ============================================
+	
+	// Noms des niveaux
+	setarray .LevelNames$[0],
+		"Ruines Oubliées",        // Niveau 0
+		"Premières Pousses",      // Niveau 1
+		"Village Naissant",       // Niveau 2
+		"Communauté Établie",     // Niveau 3
+		"Cité en Croissance",     // Niveau 4
+		"Ville Prospère",         // Niveau 5
+		"Métropole Florissante",  // Niveau 6
+		"Capitale Rayonnante",    // Niveau 7
+		"Empire Éclatant",        // Niveau 8
+		"Légende Éternelle";      // Niveau 9
+	
+	// ============================================
+	// 🎯 PRÉREQUIS PAR NIVEAU
+	// ============================================
+	// Format : .LevelRequirements[niveau * 10 + ressource_id] = quantité
+	// Niveau 0 : aucun prérequis (déjà atteint)
+	
+	// NIVEAU 1 : Premières Pousses
+	.LevelRequirements[10] = 50;   // 50 Bois
+	.LevelRequirements[11] = 30;   // 30 Nourriture
+	.LevelRequirements[12] = 20;   // 20 Cuivre
+	
+	// NIVEAU 2 : Village Naissant (À ÉDITER)
+	.LevelRequirements[20] = 100;  // Bois
+	.LevelRequirements[21] = 80;   // Nourriture
+	.LevelRequirements[22] = 50;   // Cuivre
+	.LevelRequirements[23] = 30;   // Tissu
+	
+	// NIVEAU 3 : Communauté Établie (À ÉDITER)
+	.LevelRequirements[30] = 200;
+	.LevelRequirements[31] = 150;
+	.LevelRequirements[32] = 100;
+	.LevelRequirements[33] = 80;
+	.LevelRequirements[34] = 50;   // Épice
+	
+	// NIVEAU 4 : Cité en Croissance (À ÉDITER)
+	.LevelRequirements[40] = 350;
+	.LevelRequirements[41] = 300;
+	.LevelRequirements[42] = 200;
+	.LevelRequirements[43] = 150;
+	.LevelRequirements[44] = 100;
+	.LevelRequirements[45] = 80;   // Crystal
+	
+	// NIVEAU 5 : Ville Prospère (À ÉDITER)
+	.LevelRequirements[50] = 500;
+	.LevelRequirements[51] = 450;
+	.LevelRequirements[52] = 350;
+	.LevelRequirements[53] = 300;
+	.LevelRequirements[54] = 200;
+	.LevelRequirements[55] = 150;
+	.LevelRequirements[56] = 100;  // Fer
+	
+	// NIVEAU 6 : Métropole Florissante (À ÉDITER)
+	.LevelRequirements[60] = 750;
+	.LevelRequirements[61] = 700;
+	.LevelRequirements[62] = 550;
+	.LevelRequirements[63] = 500;
+	.LevelRequirements[64] = 400;
+	.LevelRequirements[65] = 300;
+	.LevelRequirements[66] = 200;
+	.LevelRequirements[67] = 150;  // Soie
+	
+	// NIVEAU 7 : Capitale Rayonnante (À ÉDITER)
+	.LevelRequirements[70] = 1000;
+	.LevelRequirements[71] = 950;
+	.LevelRequirements[72] = 800;
+	.LevelRequirements[73] = 750;
+	.LevelRequirements[74] = 650;
+	.LevelRequirements[75] = 500;
+	.LevelRequirements[76] = 400;
+	.LevelRequirements[77] = 300;
+	.LevelRequirements[78] = 200;  // Fourrure
+	
+	// NIVEAU 8 : Empire Éclatant (À ÉDITER)
+	.LevelRequirements[80] = 1500;
+	.LevelRequirements[81] = 1400;
+	.LevelRequirements[82] = 1200;
+	.LevelRequirements[83] = 1100;
+	.LevelRequirements[84] = 1000;
+	.LevelRequirements[85] = 850;
+	.LevelRequirements[86] = 700;
+	.LevelRequirements[87] = 550;
+	.LevelRequirements[88] = 400;
+	.LevelRequirements[89] = 300;  // Hard Skin
+	
+	// NIVEAU 9 : Légende Éternelle (À ÉDITER)
+	.LevelRequirements[90] = 2000;
+	.LevelRequirements[91] = 1900;
+	.LevelRequirements[92] = 1700;
+	.LevelRequirements[93] = 1600;
+	.LevelRequirements[94] = 1500;
+	.LevelRequirements[95] = 1300;
+	.LevelRequirements[96] = 1100;
+	.LevelRequirements[97] = 900;
+	.LevelRequirements[98] = 700;
+	.LevelRequirements[99] = 500;
+	
+	// Initialiser le niveau de prospérité si pas déjà fait
+	if (!$ArborProsperityInitialized) {
+		$ArborProsperityLevel = 0;
+		$ArborProsperityInitialized = 1;
+		
+		// Initialiser toutes les ressources à 0
+		for (.@i = 0; .@i < 10; .@i++) {
+			$ArborResource[.@i] = 0;
+		}
+		
+		// Initialiser la production
+		$ArborPackages = 0;
+		$ArborProductionReserve = 0;
+		
+		// Initialiser les avant-postes
+		for (.@i = 0; .@i < .TotalOutposts; .@i++) {
+			$ArborOutpostLevel[.@i] = 0;
+			$ArborOutpostDeliveries[.@i] = 0;
+			$ArborOutpostUnlocked[.@i] = 0; // Tous les avant-postes sont verrouillés au départ
+		}
+		
+		announce "Le système de prospérité d'Arbor Ancresse a été initialisé !", bc_all, 0x00AA00;
+	}
+	
+	// Vérifier et débloquer les avant-postes selon le niveau actuel d'Arbor
+	callfunc("CheckArborOutpostUnlock");
+	
+	end;
+}
+
+//===================================================================
+//= Fonction de Débloquage des Avant-Postes
+//===================================================================
+function	script	CheckArborOutpostUnlock	{
+	// Vérifier tous les avant-postes et débloquer ceux qui remplissent les conditions
+	.@currentLevel = $ArborProsperityLevel;
+	.@totalOutposts = getvariableofnpc(.TotalOutposts, "ArborConfig");
+	
+	for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+		.@requiredLevel = getvariableofnpc(.OutpostUnlockLevel[.@i], "ArborConfig");
+		
+		// Si l'avant-poste n'est pas encore débloqué et que le niveau est atteint
+		if (!$ArborOutpostUnlocked[.@i] && .@currentLevel >= .@requiredLevel) {
+			$ArborOutpostUnlocked[.@i] = 1;
+			
+			.@outpostName$ = getvariableofnpc(.OutpostNames$[.@i], "ArborConfig");
+			announce "🗺️ Nouvel avant-poste débloqué : " + .@outpostName$ + " !", bc_all, 0x00AAFF;
+			
+			// Activer les NPCs de l'avant-poste
+			setd "$@ArborOutpostUnlocked", .@i;
+			donpcevent "ArborConfig::OnOutpostUnlock";
+		}
+	}
+	
+	return;
+}
+
+//===================================================================
+//= Fonction de Vérification de la Prospérité
+//===================================================================
+function	script	CheckArborProsperity	{
+	// Vérifier si on peut monter de niveau
+	while ($ArborProsperityLevel < 9) {
+		.@nextLevel = $ArborProsperityLevel + 1;
+		.@canLevelUp = 1;
+		
+		// Vérifier tous les prérequis du niveau suivant
+		for (.@i = 0; .@i < 10; .@i++) {
+			.@required = getvariableofnpc(.LevelRequirements[.@nextLevel * 10 + .@i], "ArborConfig");
+			.@current = $ArborResource[.@i];
+			
+			if (.@required > 0 && .@current < .@required) {
+				.@canLevelUp = 0;
+				break;
+			}
+		}
+		
+		// Si tous les prérequis sont remplis, monter de niveau
+		if (.@canLevelUp) {
+			$ArborProsperityLevel = .@nextLevel;
+			.@levelName$ = getvariableofnpc(.LevelNames$[.@nextLevel], "ArborConfig");
+			
+			announce "🎉 Arbor Ancresse a atteint le niveau " + .@nextLevel + " : " + .@levelName$ + " !", bc_all, 0x00FF00;
+			
+			// Déclencher l'événement de niveau
+			donpcevent "ArborConfig::OnLevelUp";
+		} else {
+			break;
+		}
+	}
+	
+	return;
+}
+
+//===================================================================
+//= Fonction de Livraison aux Avant-Postes
+//===================================================================
+function	script	CompleteOutpostDelivery	{
+	// Paramètre : .@outpostId (ID de l'avant-poste)
+	.@outpostId = getarg(0);
+	
+	// Vérifier si le joueur a bien un transport actif
+	if (!#arbor_transport_active) {
+		return 0;
+	}
+	
+	// Vérifier si le joueur a le colis
+	.@packageItem = getvariableofnpc(.PackageItemID, "ArborConfig");
+	if (countitem(.@packageItem) < 1) {
+		return 0;
+	}
+	
+	// Retirer le colis
+	delitem .@packageItem, 1;
+	
+	// Incrémenter les livraisons de l'avant-poste
+	$ArborOutpostDeliveries[.@outpostId]++;
+	
+	// Réinitialiser le transport du joueur
+	#arbor_transport_active = 0;
+	
+	// Vérifier si l'avant-poste peut monter de niveau
+	.@currentLevel = $ArborOutpostLevel[.@outpostId];
+	.@deliveries = $ArborOutpostDeliveries[.@outpostId];
+	
+	if (.@currentLevel < 10) {
+		.@nextLevel = .@currentLevel + 1;
+		.@required = getvariableofnpc(.OutpostLevelRequirements[.@nextLevel], "ArborConfig");
+		
+		if (.@deliveries >= .@required) {
+			$ArborOutpostLevel[.@outpostId] = .@nextLevel;
+			
+			.@name$ = getvariableofnpc(.OutpostNames$[.@outpostId], "ArborConfig");
+			.@levelName$ = getvariableofnpc(.OutpostLevelNames$[.@nextLevel], "ArborConfig");
+			
+			announce "🎉 " + .@name$ + " a atteint le niveau " + .@nextLevel + " : " + .@levelName$ + " !", bc_all, 0xFFAA00;
+			
+			// Déclencher l'événement de niveau d'avant-poste
+			setd "$@ArborOutpostLevelUp", .@outpostId;
+			donpcevent "ArborConfig::OnOutpostLevelUp";
+		}
+	}
+	
+	return 1;
+}
+
+//===================================================================
+//= Fonction d'Annulation de Transport
+//===================================================================
+function	script	CancelOutpostTransport	{
+	if (#arbor_transport_active) {
+		.@packageItem = getvariableofnpc(.PackageItemID, "ArborConfig");
+		
+		// Retirer le colis s'il l'a encore
+		if (countitem(.@packageItem) > 0) {
+			delitem .@packageItem, 1;
+		}
+		
+		// Réinitialiser la variable
+		#arbor_transport_active = 0;
+		
+		dispbottom "[Arbor] Votre transport a été annulé.";
+	}
+	
+	return;
+}
+
+//===================================================================
+//= Gestion des événements de niveau
+//===================================================================
+-	script	ArborConfig	FAKE_NPC,{
+OnLevelUp:
+	// Cette fonction est appelée quand Arbor monte de niveau
+	// Débloquer automatiquement les avant-postes
+	callfunc("CheckArborOutpostUnlock");
+	
+	// Utilisez $ArborProsperityLevel pour activer/désactiver du contenu
+	// Exemple d'utilisation :
+	// if ($ArborProsperityLevel >= 1) {
+	//     enablenpc "NPC_Special";
+	// }
+	// if ($ArborProsperityLevel >= 5) {
+	//     enablenpc "Warp_Special";
+	// }
+	
+	end;
+	
+OnOutpostUnlock:
+	// Cette fonction est appelée quand un avant-poste est débloqué
+	// Activer automatiquement les NPCs correspondants
+	
+	.@outpostId = $@ArborOutpostUnlocked;
+	
+	// ACTIVEZ VOS NPCs ICI selon l'ID de l'avant-poste
+	// Utilisez les noms EXACTS de vos NPCs
+	
+	if (.@outpostId == 0) {
+		// Avant-poste 0 : Camp du Nord
+		enablenpc "Commandant du Camp";
+		enablenpc "Marchand du Camp";
+		// Ajoutez d'autres NPCs de cet avant-poste ici
+	}
+	
+	if (.@outpostId == 1) {
+		// Avant-poste 1 : Relais de l'Est
+		enablenpc "Chef du Relais";
+		// Ajoutez d'autres NPCs de cet avant-poste ici
+	}
+	
+	if (.@outpostId == 2) {
+		// Avant-poste 2 : Forteresse du Sud
+		enablenpc "Capitaine de la Forteresse";
+		// Ajoutez d'autres NPCs de cet avant-poste ici
+	}
+	
+	// Exemple pour d'autres avant-postes :
+	// if (.@outpostId == 3) {
+	//     enablenpc "Votre_NPC_Avant_Poste_3";
+	// }
+	
+	end;
+	
+OnOutpostLevelUp:
+	// Cette fonction est appelée quand un avant-poste monte de niveau
+	// Utilisez $@ArborOutpostLevelUp pour savoir quel avant-poste a level up
+	// Utilisez $ArborOutpostLevel[id] pour connaître le niveau actuel
+	
+	.@outpostId = $@ArborOutpostLevelUp;
+	.@level = $ArborOutpostLevel[.@outpostId];
+	
+	// Exemple d'utilisation pour débloquer du contenu selon le niveau de l'avant-poste :
+	// if (.@outpostId == 0 && .@level >= 3) {
+	//     enablenpc "Warp_Donjon_Nord";
+	//     announce "Le Donjon du Nord est maintenant accessible !", bc_all, 0xFFAA00;
+	// }
+	// if (.@outpostId == 1 && .@level >= 5) {
+	//     enablenpc "Shop_Special_Est";
+	//     announce "La boutique spéciale de l'Est est ouverte !", bc_all, 0xFFAA00;
+	// }
+	// if (.@outpostId == 2 && .@level >= 7) {
+	//     enablenpc "Boss_Raid_Sud";
+	//     announce "Un boss raid apparaît au Sud !", bc_all, 0xFF0000;
+	// }
+	
+	end;
+}
+
+//===================================================================
+//= Panel Admin - Système Arbor Ancresse
+//===================================================================
+sh_fild01,155,155,4	script	Panel Admin Arbor	4_M_MANAGER,{
+	// Vérification GM (changez le niveau selon vos besoins)
+	if (getgmlevel() < 80) {
+		mes "[???]";
+		mes "...";
+		close;
+	}
+	
+	mes "[^FF0000Admin Panel^000000]";
+	mes "Gestion du système Arbor Ancresse";
+	mes " ";
+	mes "^FF6600Niveau Arbor :^000000 " + $ArborProsperityLevel + "/10";
+	mes "^00AA00Colis en stock :^000000 " + $ArborPackages;
+	next;
+	
+	while(1) {
+		switch(select("📊 Prospérité d'Arbor", "🗺️ Avant-Postes", "📦 Ressources & Colis", "🔄 Réinitialiser", "❌ Quitter")) {
+		case 1:
+			// Gestion de la prospérité d'Arbor
+			mes "[Admin Panel]";
+			mes "^FF6600Niveau actuel d'Arbor :^000000 " + $ArborProsperityLevel + "/10";
+			mes " ";
+			mes "Que voulez-vous faire ?";
+			next;
+			
+			switch(select("⬆️ Augmenter niveau", "⬇️ Diminuer niveau", "🎯 Définir niveau", "⬅️ Retour")) {
+			case 1:
+				if ($ArborProsperityLevel >= 10) {
+					mes "[Admin Panel]";
+					mes "^FF0000Niveau maximum atteint !^000000";
+					next;
+					break;
+				}
+				$ArborProsperityLevel++;
+				callfunc("CheckArborOutpostUnlock");
+				announce "[Admin] Arbor Ancresse a atteint le niveau " + $ArborProsperityLevel + " !", bc_all, 0xFF6600;
+				mes "[Admin Panel]";
+				mes "^00FF00Niveau augmenté !^000000";
+				mes "Nouveau niveau : " + $ArborProsperityLevel;
+				next;
+				break;
+				
+			case 2:
+				if ($ArborProsperityLevel <= 0) {
+					mes "[Admin Panel]";
+					mes "^FF0000Niveau minimum atteint !^000000";
+					next;
+					break;
+				}
+				$ArborProsperityLevel--;
+				mes "[Admin Panel]";
+				mes "^00FF00Niveau diminué !^000000";
+				mes "Nouveau niveau : " + $ArborProsperityLevel;
+				next;
+				break;
+				
+			case 3:
+				mes "[Admin Panel]";
+				mes "Entrez le nouveau niveau (0-10) :";
+				input .@newLevel;
+				
+				if (.@newLevel < 0 || .@newLevel > 10) {
+					mes "[Admin Panel]";
+					mes "^FF0000Niveau invalide !^000000";
+					next;
+					break;
+				}
+				
+				$ArborProsperityLevel = .@newLevel;
+				callfunc("CheckArborOutpostUnlock");
+				announce "[Admin] Arbor Ancresse est maintenant au niveau " + $ArborProsperityLevel + " !", bc_all, 0xFF6600;
+				mes "[Admin Panel]";
+				mes "^00FF00Niveau défini !^000000";
+				mes "Nouveau niveau : " + $ArborProsperityLevel;
+				next;
+				break;
+				
+			case 4:
+				break;
+			}
+			break;
+			
+		case 2:
+			// Gestion des avant-postes
+			mes "[Admin Panel]";
+			mes "^00AA00=== Gestion des Avant-Postes ===^000000";
+			mes " ";
+			
+			.@totalOutposts = getvariableofnpc(.TotalOutposts, "ArborConfig");
+			for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+				.@name$ = getvariableofnpc(.OutpostNames$[.@i], "ArborConfig");
+				.@unlocked$ = ($ArborOutpostUnlocked[.@i]) ? "^00FF00✓^000000" : "^FF0000✗^000000";
+				mes .@unlocked$ + " " + .@name$ + " (Niv. " + $ArborOutpostLevel[.@i] + ", " + $ArborOutpostDeliveries[.@i] + " livr.)";
+			}
+			next;
+			
+			mes "[Admin Panel]";
+			mes "Sélectionnez un avant-poste :";
+			next;
+			
+			// Créer le menu
+			.@menu$ = "";
+			for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+				.@name$ = getvariableofnpc(.OutpostNames$[.@i], "ArborConfig");
+				.@menu$ += .@name$ + ":";
+			}
+			.@menu$ += "Retour";
+			
+			.@choice = select(.@menu$) - 1;
+			
+			if (.@choice >= .@totalOutposts) {
+				break;
+			}
+			
+			// Gestion de l'avant-poste sélectionné
+			.@name$ = getvariableofnpc(.OutpostNames$[.@choice], "ArborConfig");
+			
+			mes "[Admin Panel]";
+			mes "^0099FF" + .@name$ + "^000000";
+			mes " ";
+			mes "Débloqué : " + (($ArborOutpostUnlocked[.@choice]) ? "^00FF00Oui^000000" : "^FF0000Non^000000");
+			mes "Niveau : " + $ArborOutpostLevel[.@choice] + "/10";
+			mes "Livraisons : " + $ArborOutpostDeliveries[.@choice];
+			next;
+			
+			switch(select("⬆️ Ajouter 10 livraisons", "🎯 Définir livraisons", "🔓 Toggle Débloquage", "🔄 Reset avant-poste", "⬅️ Retour")) {
+			case 1:
+				$ArborOutpostDeliveries[.@choice] += 10;
+				callfunc("CompleteOutpostDelivery", .@choice); // Vérifier level up
+				mes "[Admin Panel]";
+				mes "^00FF00+10 livraisons ajoutées !^000000";
+				mes "Total : " + $ArborOutpostDeliveries[.@choice];
+				next;
+				break;
+				
+			case 2:
+				mes "[Admin Panel]";
+				mes "Entrez le nombre de livraisons :";
+				input .@deliveries;
+				
+				if (.@deliveries < 0) {
+					mes "[Admin Panel]";
+					mes "^FF0000Nombre invalide !^000000";
+					next;
+					break;
+				}
+				
+				$ArborOutpostDeliveries[.@choice] = .@deliveries;
+				
+				// Recalculer le niveau
+				.@level = 0;
+				for (.@i = 10; .@i >= 1; .@i--) {
+					.@required = getvariableofnpc(.OutpostLevelRequirements[.@i], "ArborConfig");
+					if (.@deliveries >= .@required) {
+						.@level = .@i;
+						break;
+					}
+				}
+				$ArborOutpostLevel[.@choice] = .@level;
+				
+				mes "[Admin Panel]";
+				mes "^00FF00Livraisons définies !^000000";
+				mes "Livraisons : " + .@deliveries;
+				mes "Niveau calculé : " + .@level;
+				next;
+				break;
+				
+			case 3:
+				if ($ArborOutpostUnlocked[.@choice]) {
+					$ArborOutpostUnlocked[.@choice] = 0;
+					mes "[Admin Panel]";
+					mes "^FF6600Avant-poste verrouillé !^000000";
+				} else {
+					$ArborOutpostUnlocked[.@choice] = 1;
+					setd "$@ArborOutpostUnlocked", .@choice;
+					donpcevent "ArborConfig::OnOutpostUnlock";
+					mes "[Admin Panel]";
+					mes "^00FF00Avant-poste débloqué !^000000";
+				}
+				next;
+				break;
+				
+			case 4:
+				$ArborOutpostLevel[.@choice] = 0;
+				$ArborOutpostDeliveries[.@choice] = 0;
+				$ArborOutpostUnlocked[.@choice] = 0;
+				mes "[Admin Panel]";
+				mes "^00FF00Avant-poste réinitialisé !^000000";
+				next;
+				break;
+				
+			case 5:
+				break;
+			}
+			break;
+			
+		case 3:
+			// Gestion des ressources et colis
+			mes "[Admin Panel]";
+			mes "^FFAA00=== Ressources & Colis ===^000000";
+			mes " ";
+			mes "Colis en stock : " + $ArborPackages;
+			mes "Réserves de production : " + $ArborProductionReserve;
+			next;
+			
+			switch(select("📦 Ajouter colis", "🌾 Ajouter ressources", "💎 Ajouter ressources prospérité", "⬅️ Retour")) {
+			case 1:
+				mes "[Admin Panel]";
+				mes "Combien de colis ajouter ?";
+				input .@amount;
+				
+				if (.@amount <= 0) {
+					mes "[Admin Panel]";
+					mes "^FF0000Montant invalide !^000000";
+					next;
+					break;
+				}
+				
+				$ArborPackages += .@amount;
+				mes "[Admin Panel]";
+				mes "^00FF00" + .@amount + " colis ajoutés !^000000";
+				mes "Total : " + $ArborPackages;
+				next;
+				break;
+				
+			case 2:
+				mes "[Admin Panel]";
+				mes "Combien de ressources de production ajouter ?";
+				input .@amount;
+				
+				if (.@amount <= 0) {
+					mes "[Admin Panel]";
+					mes "^FF0000Montant invalide !^000000";
+					next;
+					break;
+				}
+				
+				$ArborProductionReserve += .@amount;
+				mes "[Admin Panel]";
+				mes "^00FF00" + .@amount + " ressources ajoutées !^000000";
+				mes "Total : " + $ArborProductionReserve;
+				next;
+				break;
+				
+			case 3:
+				mes "[Admin Panel]";
+				mes "Quelle ressource ?";
+				next;
+				
+				.@menu$ = "";
+				for (.@i = 0; .@i < 10; .@i++) {
+					.@itemId = getvariableofnpc(.ResourceItems[.@i], "ArborConfig");
+					.@itemName$ = getitemname(.@itemId);
+					.@menu$ += .@itemName$ + " (" + $ArborResource[.@i] + "):";
+				}
+				.@menu$ += "Annuler";
+				
+				.@choice = select(.@menu$) - 1;
+				
+				if (.@choice == 10) {
+					break;
+				}
+				
+				mes "[Admin Panel]";
+				mes "Combien ajouter ?";
+				input .@amount;
+				
+				if (.@amount <= 0) {
+					mes "[Admin Panel]";
+					mes "^FF0000Montant invalide !^000000";
+					next;
+					break;
+				}
+				
+				$ArborResource[.@choice] += .@amount;
+				callfunc("CheckArborProsperity");
+				
+				mes "[Admin Panel]";
+				mes "^00FF00" + .@amount + " ressources ajoutées !^000000";
+				next;
+				break;
+				
+			case 4:
+				break;
+			}
+			break;
+			
+		case 4:
+			// Réinitialisation
+			mes "[Admin Panel]";
+			mes "^FF0000ATTENTION !^000000";
+			mes " ";
+			mes "Voulez-vous vraiment réinitialiser";
+			mes "tout le système Arbor Ancresse ?";
+			next;
+			
+			if (select("Non", "Oui, réinitialiser") == 1) {
+				mes "[Admin Panel]";
+				mes "Annulé.";
+				next;
+				break;
+			}
+			
+			// Réinitialisation complète
+			$ArborProsperityLevel = 0;
+			$ArborPackages = 0;
+			$ArborProductionReserve = 0;
+			
+			for (.@i = 0; .@i < 10; .@i++) {
+				$ArborResource[.@i] = 0;
+			}
+			
+			.@totalOutposts = getvariableofnpc(.TotalOutposts, "ArborConfig");
+			for (.@i = 0; .@i < .@totalOutposts; .@i++) {
+				$ArborOutpostLevel[.@i] = 0;
+				$ArborOutpostDeliveries[.@i] = 0;
+				$ArborOutpostUnlocked[.@i] = 0;
+			}
+			
+			announce "[Admin] Le système Arbor Ancresse a été réinitialisé !", bc_all, 0xFF0000;
+			
+			mes "[Admin Panel]";
+			mes "^00FF00Système réinitialisé !^000000";
+			next;
+			break;
+			
+		case 5:
+			mes "[Admin Panel]";
+			mes "À bientôt !";
+			close;
+		}
+	}
+}
+
