@@ -8,7 +8,7 @@
 //===================================================================
 //= Hub Principal d'Arbor Ancresse
 //===================================================================
-sh_fild01,150,150,4	script	Hub d'Arbor Ancresse	4_M_ORIENT02,{
+sh_fild01,197,140,4	script	Hub d'Arbor Ancresse	4_M_ORIENT02,{
 	.@city = 5; // ID de la ville (5 = Arbor Ancresse)
 	
 	mes "[Gardien d'Arbor]";
@@ -129,7 +129,7 @@ sh_fild01,150,150,4	script	Hub d'Arbor Ancresse	4_M_ORIENT02,{
 //===================================================================
 //= Dépôt de Ressources d'Arbor Ancresse
 //===================================================================
-sh_fild01,145,150,4	script	Dépôt de Ressources	4_M_03,{
+sh_fild01,202,146,4	script	Dépôt de Ressources	4_M_03,{
 	.@city = 5; // ID de la ville
 	
 	mes "[Intendant des Ressources]";
@@ -353,7 +353,7 @@ S_DepositForProduction:
 //===================================================================
 //= Boutique de Ressources d'Arbor Ancresse
 //===================================================================
-sh_fild01,155,150,4	script	Marchand d'Arbor	4_M_RACHMAN1,{
+sh_fild01,192,154,4	script	Marchand d'Arbor	4_M_RACHMAN1,{
 	mes "[Marchand d'Arbor]";
 	mes "Bienvenue !";
 	mes "Je vends les ressources";
@@ -427,7 +427,7 @@ sh_fild01,155,150,4	script	Marchand d'Arbor	4_M_RACHMAN1,{
 //===================================================================
 //= Point de Livraison d'Arbor Ancresse
 //===================================================================
-sh_fild01,150,145,4	script	Point de Livraison	4_M_MANAGER,{
+sh_fild01,189,153,4	script	Point de Livraison	4_M_MANAGER,{
 	mes "[Coordinateur de Livraison]";
 	mes "Bienvenue au point de livraison";
 	mes "d'Arbor Ancresse.";
