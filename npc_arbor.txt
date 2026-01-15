@@ -1060,7 +1060,7 @@ function	script	CancelOutpostTransport	{
 //===================================================================
 //= Panel Admin - Système Arbor Ancresse
 //===================================================================
-sh_fild01,155,155,4	script	Panel Admin Arbor	4_M_MANAGER,{
+sh_fild01,190,145,4	script	Panel Admin Arbor	4_M_MANAGER,{
 	// Vérification GM (changez le niveau selon vos besoins)
 	if (getgmlevel() < 80) {
 		mes "[???]";
