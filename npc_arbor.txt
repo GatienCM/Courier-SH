@@ -660,9 +660,9 @@ OnInit:
 	
 	// Maps des avant-postes (À MODIFIER avec vos vraies maps)
 	setarray .OutpostMaps$[0],
-		"sh_fild02",  // Avant-poste 0
-		"sh_fild03",  // Avant-poste 1
-		"sh_fild04";  // Avant-poste 2
+		"sh_fild16",  // Avant-poste 0
+		"sh_fild16",  // Avant-poste 1
+		"sh_fild16";  // Avant-poste 2
 	
 	// Coordonnées des NPCs de réception (x, y alternés)
 	setarray .OutpostCoords[0],
@@ -843,6 +843,81 @@ OnInit:
 	callfunc("CheckArborOutpostUnlock");
 	
 	end;
+
+OnLevelUp:
+	// Cette fonction est appelée quand Arbor monte de niveau
+	// Débloquer automatiquement les avant-postes
+	callfunc("CheckArborOutpostUnlock");
+	
+	// Utilisez $ArborProsperityLevel pour activer/désactiver du contenu
+	// Exemple d'utilisation :
+	// if ($ArborProsperityLevel >= 1) {
+	//     enablenpc "NPC_Special";
+	// }
+	// if ($ArborProsperityLevel >= 5) {
+	//     enablenpc "Warp_Special";
+	// }
+	
+	end;
+	
+OnOutpostUnlock:
+	// Cette fonction est appelée quand un avant-poste est débloqué
+	// Activer automatiquement les NPCs correspondants
+	
+	.@outpostId = $@ArborOutpostUnlocked;
+	
+	// ACTIVEZ VOS NPCs ICI selon l'ID de l'avant-poste
+	// Utilisez les noms EXACTS de vos NPCs
+	
+	if (.@outpostId == 0) {
+		// Avant-poste 0 : Camp du Nord
+		enablenpc "Commandant du Camp";
+		enablenpc "Marchand du Camp";
+		// Ajoutez d'autres NPCs de cet avant-poste ici
+	}
+	
+	if (.@outpostId == 1) {
+		// Avant-poste 1 : Relais de l'Est
+		enablenpc "Chef du Relais";
+		// Ajoutez d'autres NPCs de cet avant-poste ici
+	}
+	
+	if (.@outpostId == 2) {
+		// Avant-poste 2 : Forteresse du Sud
+		enablenpc "Capitaine de la Forteresse";
+		// Ajoutez d'autres NPCs de cet avant-poste ici
+	}
+	
+	// Exemple pour d'autres avant-postes :
+	// if (.@outpostId == 3) {
+	//     enablenpc "Votre_NPC_Avant_Poste_3";
+	// }
+	
+	end;
+	
+OnOutpostLevelUp:
+	// Cette fonction est appelée quand un avant-poste monte de niveau
+	// Utilisez $@ArborOutpostLevelUp pour savoir quel avant-poste a level up
+	// Utilisez $ArborOutpostLevel[id] pour connaître le niveau actuel
+	
+	.@outpostId = $@ArborOutpostLevelUp;
+	.@level = $ArborOutpostLevel[.@outpostId];
+	
+	// Exemple d'utilisation pour débloquer du contenu selon le niveau de l'avant-poste :
+	// if (.@outpostId == 0 && .@level >= 3) {
+	//     enablenpc "Warp_Donjon_Nord";
+	//     announce "Le Donjon du Nord est maintenant accessible !", bc_all, 0xFFAA00;
+	// }
+	// if (.@outpostId == 1 && .@level >= 5) {
+	//     enablenpc "Shop_Special_Est";
+	//     announce "La boutique spéciale de l'Est est ouverte !", bc_all, 0xFFAA00;
+	// }
+	// if (.@outpostId == 2 && .@level >= 7) {
+	//     enablenpc "Boss_Raid_Sud";
+	//     announce "Un boss raid apparaît au Sud !", bc_all, 0xFF0000;
+	// }
+	
+	end;
 }
 
 //===================================================================
@@ -980,86 +1055,6 @@ function	script	CancelOutpostTransport	{
 	}
 	
 	return;
-}
-
-//===================================================================
-//= Gestion des événements de niveau
-//===================================================================
--	script	ArborConfig	FAKE_NPC,{
-OnLevelUp:
-	// Cette fonction est appelée quand Arbor monte de niveau
-	// Débloquer automatiquement les avant-postes
-	callfunc("CheckArborOutpostUnlock");
-	
-	// Utilisez $ArborProsperityLevel pour activer/désactiver du contenu
-	// Exemple d'utilisation :
-	// if ($ArborProsperityLevel >= 1) {
-	//     enablenpc "NPC_Special";
-	// }
-	// if ($ArborProsperityLevel >= 5) {
-	//     enablenpc "Warp_Special";
-	// }
-	
-	end;
-	
-OnOutpostUnlock:
-	// Cette fonction est appelée quand un avant-poste est débloqué
-	// Activer automatiquement les NPCs correspondants
-	
-	.@outpostId = $@ArborOutpostUnlocked;
-	
-	// ACTIVEZ VOS NPCs ICI selon l'ID de l'avant-poste
-	// Utilisez les noms EXACTS de vos NPCs
-	
-	if (.@outpostId == 0) {
-		// Avant-poste 0 : Camp du Nord
-		enablenpc "Commandant du Camp";
-		enablenpc "Marchand du Camp";
-		// Ajoutez d'autres NPCs de cet avant-poste ici
-	}
-	
-	if (.@outpostId == 1) {
-		// Avant-poste 1 : Relais de l'Est
-		enablenpc "Chef du Relais";
-		// Ajoutez d'autres NPCs de cet avant-poste ici
-	}
-	
-	if (.@outpostId == 2) {
-		// Avant-poste 2 : Forteresse du Sud
-		enablenpc "Capitaine de la Forteresse";
-		// Ajoutez d'autres NPCs de cet avant-poste ici
-	}
-	
-	// Exemple pour d'autres avant-postes :
-	// if (.@outpostId == 3) {
-	//     enablenpc "Votre_NPC_Avant_Poste_3";
-	// }
-	
-	end;
-	
-OnOutpostLevelUp:
-	// Cette fonction est appelée quand un avant-poste monte de niveau
-	// Utilisez $@ArborOutpostLevelUp pour savoir quel avant-poste a level up
-	// Utilisez $ArborOutpostLevel[id] pour connaître le niveau actuel
-	
-	.@outpostId = $@ArborOutpostLevelUp;
-	.@level = $ArborOutpostLevel[.@outpostId];
-	
-	// Exemple d'utilisation pour débloquer du contenu selon le niveau de l'avant-poste :
-	// if (.@outpostId == 0 && .@level >= 3) {
-	//     enablenpc "Warp_Donjon_Nord";
-	//     announce "Le Donjon du Nord est maintenant accessible !", bc_all, 0xFFAA00;
-	// }
-	// if (.@outpostId == 1 && .@level >= 5) {
-	//     enablenpc "Shop_Special_Est";
-	//     announce "La boutique spéciale de l'Est est ouverte !", bc_all, 0xFFAA00;
-	// }
-	// if (.@outpostId == 2 && .@level >= 7) {
-	//     enablenpc "Boss_Raid_Sud";
-	//     announce "Un boss raid apparaît au Sud !", bc_all, 0xFF0000;
-	// }
-	
-	end;
 }
 
 //===================================================================

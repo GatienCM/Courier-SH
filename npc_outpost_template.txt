@@ -13,12 +13,12 @@
 //===================================================================
 
 //===================================================================
-//= AVANT-POSTE 0 : Camp du Nord (sh_fild02)
+//= AVANT-POSTE 0 : Camp du Nord (sh_fild16)
 //===================================================================
 
 // NPC de Réception des Livraisons
 // IMPORTANT : Ce NPC est disabled par défaut et sera activé quand Arbor atteindra le niveau requis
-sh_fild02,100,100,4	script	Commandant du Camp	4_M_JOB_KNIGHT1,{
+sh_fild16,100,100,4	script	Commandant du Camp	4_M_JOB_KNIGHT1,{
 	.@outpostId = 0; // ID de cet avant-poste (0, 1, 2...)
 	
 	// Vérifier si l'avant-poste est débloqué
@@ -38,7 +38,6 @@ sh_fild02,100,100,4	script	Commandant du Camp	4_M_JOB_KNIGHT1,{
 	
 	while(1) {
 		switch(select("📦 Livrer un colis", "📊 Statut de l'avant-poste", "🎁 Récompenses", "Quitter")) {
-		case 1:
 		case 1:
 			// Livraison
 			if (!#arbor_transport_active) {
@@ -156,7 +155,7 @@ OnInit:
 }
 
 // Exemple de NPC qui se débloque selon le niveau de l'avant-poste
-sh_fild02,105,100,4	script	Marchand du Camp	4_M_01,{
+sh_fild16,105,100,4	script	Marchand du Camp	4_M_01,{
 	.@outpostId = 0;
 	
 	// Vérifier si l'avant-poste est débloqué
@@ -198,7 +197,7 @@ OnInit:
 }
 
 // Exemple de Warp qui se débloque selon le niveau de l'avant-poste
-sh_fild02,110,100,0	script	#warp_grotte_nord	WARPNPC,2,2,{
+sh_fild16,110,100,0	script	#warp_grotte_nord	WARPNPC,2,2,{
 	.@outpostId = 0;
 	
 	// Vérifier si l'avant-poste est débloqué
@@ -229,10 +228,10 @@ sh_fild02,110,100,0	script	#warp_grotte_nord	WARPNPC,2,2,{
 }
 
 //===================================================================
-//= AVANT-POSTE 1 : Relais de l'Est (sh_fild03)
+//= AVANT-POSTE 1 : Relais de l'Est (sh_fild16)
 //===================================================================
 
-sh_fild03,150,150,4	script	Chef du Relais	4_M_JOB_KNIGHT2,{
+sh_fild16,150,150,4	script	Chef du Relais	4_M_JOB_KNIGHT2,{
 	.@outpostId = 1; // ID de cet avant-poste
 	
 	// Vérifier si l'avant-poste est débloqué
@@ -368,10 +367,10 @@ OnInit:
 }
 
 //===================================================================
-//= AVANT-POSTE 2 : Forteresse du Sud (sh_fild04)
+//= AVANT-POSTE 2 : Forteresse du Sud (sh_fild16)
 //===================================================================
 
-sh_fild04,200,200,4	script	Capitaine de la Forteresse	4_M_KNIGHT_GOLD,{
+sh_fild16,200,200,4	script	Capitaine de la Forteresse	4_M_KNIGHT_GOLD,{
 	.@outpostId = 2; // ID de cet avant-poste
 	
 	// Vérifier si l'avant-poste est débloqué
@@ -534,7 +533,7 @@ OnInit:
 // UTILISATION DANS VOS NPCs :
 // 
 // 1. Créer un NPC d'avant-poste invisible au départ :
-//    sh_fild02,100,100,4  script  Mon NPC  4_M_01,{
+//    sh_fild16,100,100,4  script  Mon NPC  4_M_01,{
 //        .@outpostId = 0;
 //        
 //        if (!$ArborOutpostUnlocked[.@outpostId]) {
